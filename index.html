@@ -682,7 +682,7 @@ function jobCard(j,showDate){
       <span class="job-sub">${c.contract?'HĐ '+esc(c.contract)+' · ':''}${esc(c.address||'Chưa có địa chỉ')}</span>
       <span class="job-meta">${(j.photos||[]).length?`<span class="pill s-cho">${j.photos.length} ảnh</span>`:''}
         ${j.issue&&j.type==='bao_tri'?`<span>${esc(j.issue)}</span>`:''}
-        ${rx?`<span class="pill ${rx.cls}">Rx <span class="mono">${esc(j.rx)}</span> dBm</span>`:''}
+
         
       </span>
     </span></button>`;
@@ -778,8 +778,6 @@ function dayReport(){
     out+=`\n${T.label.toUpperCase()}: ${js.length} ca\n`;
     js.forEach(j=>{const c=custOf(j);
       out+=`- ${fmtTime(doneAt(j))} ${c.contract?'HĐ '+c.contract+' – ':''}${c.name}`;if(j.type==='bao_tri'&&j.issue)out+=` – ${j.issue}`;
-      if(j.rx!==''&&j.rx!=null)out+=` – Rx ${j.rx} dBm`;
-      if(j.down)out+=` – ${j.down}/${j.up||'?'} Mbps`;
       {const r=rateOf(j);if(r.st!=='chua')out+=` – Hi FPT: ${RATE_ST[r.st].l}${r.st==='danhgia'&&r.stars?' '+r.stars+'★':''}`;}
       if(j.note)out+=` – ${j.note}`;out+='\n';});
   });
@@ -1057,7 +1055,7 @@ function openJob(id,preset){
       <label class="f">Hoàn thành lúc<input id="fDoneAt" type="datetime-local" value="${toLocalInput(doneAt(j))}"></label>
       <label class="f" id="issueBox">Lỗi khách báo<select id="fIssue"><option value="">— Chọn —</option>${ISSUES.map(x=>`<option ${x===j.issue?'selected':''}>${x}</option>`).join('')}</select></label>
     </fieldset>
-    <fieldset id="measBox"><legend>Đo kiểm</legend>
+    <fieldset id="measBox" hidden><legend>Đo kiểm</legend>
       <div class="grid2">
         <label class="f">Công suất quang Rx (dBm)<input id="fRx" type="number" step="0.01" inputmode="decimal" placeholder="VD: -19.5" value="${esc(j.rx)}"><span id="rxHint" class="hint">Ngưỡng GPON: −8 đến −27 dBm</span></label>
         <label class="f">Serial ONT/Modem<input id="fSerial" autocomplete="off" value="${esc(j.serial)}" class="mono"></label>
@@ -1339,9 +1337,6 @@ function caseInfoHTML(j){
     <div class="infobox">
       <div class="kv"><span>Đánh giá Hi FPT</span><span>${(()=>{const r=rateOf(j);return `<span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span>${r.st==='danhgia'&&r.stars?' <span style="color:var(--fiber);letter-spacing:1px">'+'★'.repeat(r.stars)+'</span>':''}`;})()}</span></div>
       ${j.issue?`<div class="kv"><span>Lỗi khách báo</span><span>${esc(j.issue)}</span></div>`:''}
-      <div class="kv"><span>Công suất quang Rx</span><span>${rx?`<span class="mono">${esc(j.rx)} dBm</span> <span class="pill ${rx.cls}">${rx.t}</span>`:'—'}</span></div>
-      <div class="kv"><span>Tốc độ</span><span class="mono">${j.down?esc(j.down)+' / '+esc(j.up||'?')+' Mbps':'—'}</span></div>
-      <div class="kv"><span>Serial ONT/Modem</span><span class="mono">${esc(j.serial||'—')}</span></div>
       <div class="kv"><span>Tọa độ</span><span>${hasCoord(j)?`<a href="${mapUrl(j.lat,j.lng)}" target="_blank" rel="noopener" class="mono" style="color:var(--accent)">${(+j.lat).toFixed(6)}, ${(+j.lng).toFixed(6)}</a>${j.coordSrc==='gps'&&j.coordAcc?` <span class="hint">GPS ±${j.coordAcc} m</span>`:''}`:'—'}</span></div>
     </div>
     ${(j.photos||[]).length?`<div class="sec-title" style="font-size:18px">Ảnh kỹ thuật <small>${j.photos.length} ảnh</small></div><div class="thumbs" data-photos="${esc(j.photos.join(','))}"></div>`:''}
@@ -1366,7 +1361,7 @@ function renderLookDetail(){
     <div class="sec-title" style="font-size:18px">Lịch sử ca <small>TK ${js.filter(j=>j.type==='trien_khai').length} · BT ${js.filter(j=>j.type==='bao_tri').length}</small></div>
     ${js.length?`<div class="tl">${js.map(j=>{const d=doneAt(j);return `<button class="tl-i c-${esc(j.type)} done" type="button" data-lj="${esc(j.id)}">
       <span class="row" style="gap:8px"><b style="font-size:15px">${esc(fmtFull(d))}</b><span class="tag">${j.type==='trien_khai'?'TK':j.type==='bao_tri'?'BT':esc(typeLabel(j.type))}</span><span class="hint">${daysSince(d)} ngày trước</span></span>
-      <span class="hint">${j.type==='bao_tri'?esc(j.issue||(j.bt&&j.bt.nguyennhan)||'Bảo trì'):'Triển khai'}${j.rx!==''&&j.rx!=null?' · Rx '+esc(j.rx)+' dBm':''} · xem chi tiết ›</span></button>`}).join('')}</div>`:'<div class="hint">Chưa có ca nào.</div>'}
+      <span class="hint">${j.type==='bao_tri'?esc(j.issue||(j.bt&&j.bt.nguyennhan)||'Bảo trì'):'Triển khai'} · xem chi tiết ›</span></button>`}).join('')}</div>`:'<div class="hint">Chưa có ca nào.</div>'}
     <div class="kv"><span class="hint">Tọa độ</span>${hasCoord(c)?`<a class="mono" style="color:var(--accent)" href="${mapUrl(c.lat,c.lng)}" target="_blank" rel="noopener">${(+c.lat).toFixed(6)}, ${(+c.lng).toFixed(6)}</a>`:'<span class="pill p-warn">Chưa có</span>'}</div>
    </div></div>`;
 }
