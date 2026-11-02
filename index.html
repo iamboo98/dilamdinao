@@ -928,7 +928,11 @@ function rateMsg(j){const c=custOf(j);
   let t=rateTpl(j.type).replace(/\[\[(.*?)\]\]/g,(_,inner)=>{const ks=[...inner.matchAll(/\{(\w+)\}/g)].map(x=>x[1]);return ks.some(k=>k in v&&!v[k])?'':inner;});
   if(!v.hd)t=t.replace(/\s*[(,]?\s*(?:SHĐ|HĐ|số hợp đồng)\s*:?\s*\{hd\}\)?/gi,'');
   return t.replace(/\{(ten|hd|ngay|loai|loi)\}/g,(_,k)=>v[k]);}
-function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j);const r=rateOf(j);const ph=(c.phone||'').replace(/\D/g,'');
+const zaloPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.startsWith('84')&&d.length>=11)d='0'+d.slice(2);return d.length>=9?d:'';};
+const ZALO_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10h5l-5 4.5h5"/></svg>';
+const normHD=v=>String(v||'').toUpperCase().replace(/[\s.\-_]/g,'');
+function custByContract(v,exceptId){const k=normHD(v);if(k.length<4)return null;return Object.values(Store.customers).find(c=>c.id!==exceptId&&normHD(c.contract)===k)||null;}
+function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j);const r=rateOf(j);const ph=zaloPhone(c.phone);
   openSheet('Xin đánh giá Hi FPT',`<div class="infobox">
       <div class="kv"><span>Khách hàng</span><b>${esc(c.name)}</b></div>
       <div class="kv"><span>Số hợp đồng</span><span class="mono">${esc(c.contract||'—')}</span></div>
@@ -939,13 +943,13 @@ function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j)
     <label class="f">Lời nhắn (đã điền tên, SHĐ, ngày; sửa riêng cho ca này nếu cần)<textarea id="rmText" style="min-height:190px">${esc(rateMsg(j))}</textarea></label>`,
     root=>{const txt=()=>$('#rmText',root).value.trim();
       $('#rmCopy',root).addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');});
-      $('#rmZalo',root)?.addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn, dán vào khung chat Zalo');});
+      $('#rmZalo',root)?.addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');});
       $('#rmSms',root)?.addEventListener('pointerdown',()=>{$('#rmSms',root).href=`sms:${ph}?body=${encodeURIComponent(txt())}`;});
       $('#rmCust',root).addEventListener('click',()=>openCustomer(c.id));
     },`<button class="btn sm" type="button" id="rmCust">Sửa thông tin khách</button><div class="row">
-      ${ph?`<a class="btn" id="rmZalo" href="https://zalo.me/${ph}" target="_blank" rel="noopener">Mở Zalo</a>`:''}
+
       ${ph&&!isEmbedded?`<a class="btn" id="rmSms" href="sms:${ph}">Gửi SMS</a>`:''}
-      <button class="btn pri" type="button" id="rmCopy">Chép lời nhắn</button></div>`);
+      ${ph?`<button class="btn" type="button" id="rmCopy">Chép lời nhắn</button><a class="btn pri" id="rmZalo" href="https://zalo.me/${ph}" target="_blank" rel="noopener">${ZALO_ICON}Gửi qua Zalo</a>`:'<button class="btn pri" type="button" id="rmCopy">Chép lời nhắn</button>'}</div>`);
   const sf=$('.sheet-f');if(sf){const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent=r.st==='danhgia'?'Chuyển về chưa đánh giá':'✓ Đã đánh giá';
     b.addEventListener('click',()=>{setRate(id,{st:r.st==='danhgia'?'chua':'danhgia'});closeSheet();toast(r.st==='danhgia'?'Chưa đánh giá':'Đã đánh giá, chạm sao để ghi số sao');});sf.firstElementChild.after(b);}}
 function starsHTML(n,jid){return `<span class="stars" ${jid?`data-stars="${esc(jid)}"`:''}>${[1,2,3,4,5].map(i=>`<button type="button" class="star${i<=n?' on':''}" data-star="${i}" aria-label="${i} sao">★</button>`).join('')}</span>`;}
@@ -975,8 +979,8 @@ function renderRates(){
       <div class="job-sub">${[c.contract?'HĐ '+esc(c.contract):'',c.phone?'<span class="mono">'+esc(c.phone)+'</span>':''].filter(Boolean).join(' · ')}</div>
       ${r.st==='danhgia'?`<div class="row" style="gap:8px">${starsHTML(r.stars,j.id)}<span class="hint">${r.stars?'':'Chạm để chọn số sao KH chấm'}</span></div>`:''}
       <div class="row" style="gap:6px">
-        <button class="btn sm${r.st==='chua'?' pri':''}" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button>
-        ${c.phone?`<button class="btn sm" type="button" data-copy-phone="${esc(c.phone)}">Chép SĐT</button>`:''}
+        ${zaloPhone(c.phone)?`<a class="btn sm${r.st==='chua'?' pri':''}" href="https://zalo.me/${zaloPhone(c.phone)}" target="_blank" rel="noopener" data-rzalo="${esc(j.id)}">${ZALO_ICON}Gửi Zalo</a><button class="btn sm" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button>`
+          :`<button class="btn sm${r.st==='chua'?' pri':''}" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button><button class="btn sm" type="button" data-cust="${esc(c.id)}">+ Thêm SĐT</button>`}
         ${r.st==='chua'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="danhgia">✓ Đã đánh giá</button>`:`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="chua">Chuyển về chưa đánh giá</button>`}
       </div></div></div>`;}).join('');
 }
@@ -1120,6 +1124,10 @@ function openJob(id,preset){
         h.className=q&&!list.length?'hint bad':'hint';h.textContent=q?(list.length?`Tìm thấy ${list.length} khách${list.length>1?', đã chọn khách khớp nhất':''}.`:'Chưa có khách này. Nhập thông tin để tạo khách mới.'):'';
         if(sel.value!==cur||q)sel.dispatchEvent(new Event('change'));});
       if(!ex&&!preset?.customerId)setTimeout(()=>$('#fCustQ',root).focus(),60);}
+    $('#nContract',root).addEventListener('input',e=>{const c=custByContract(e.target.value);if(!c)return;
+      if(![...sel.options].some(o=>o.value===c.id)){const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.contract?' · '+c.contract:'');sel.appendChild(o);}
+      sel.value=c.id;sel.dispatchEvent(new Event('change'));['nName','nContract','nPhone','nAddr'].forEach(id=>{const el=$('#'+id,root);if(el)el.value='';});
+      const h=$('#fCustQHint',root);h.className='hint ok';h.textContent=`SHĐ ${c.contract} đã có: ${c.name}. Đã điền thông tin khách có sẵn.`;toast('Khách đã có, đã điền thông tin sẵn');});
     const showCust=()=>{const isNew=sel.value==='__new';$('#newCustBox',root).hidden=!isNew;const c=Store.customers[sel.value];
       $('#custInfo',root).innerHTML=c?`<div class="infobox">${c.flag&&FLAG_LV[c.flag.level]?`<div class="flagwarn ${c.flag.level}">${flagPill(c)} ${esc((c.flag.reasons||[]).join(', '))}${c.flag.note?' · '+esc(c.flag.note):''}</div>`:''}
         <div class="kv"><span>Điện thoại</span><span class="row"><span class="mono">${esc(c.phone||'—')}</span>${c.phone?`<button class="btn sm" type="button" data-copy="${esc(c.phone)}">Chép</button>`:''}</span></div>
@@ -1228,7 +1236,7 @@ function openCustomer(id){
   const body=`
     <fieldset><legend>Thông tin khách</legend><div class="grid2">
       <label class="f">Họ tên<input id="cName" value="${esc(c.name)}" autocomplete="off"></label>
-      <label class="f">Số hợp đồng<input id="cContract" value="${esc(c.contract)}" autocomplete="off"></label>
+      <label class="f">Số hợp đồng<input id="cContract" value="${esc(c.contract)}" autocomplete="off"><span class="hint bad" id="cDupHint"></span></label>
       <label class="f">Số điện thoại<input id="cPhone" type="tel" value="${esc(c.phone)}" autocomplete="off"></label>
       <label class="f">Địa chỉ<input id="cAddr" value="${esc(c.address)}" autocomplete="off"></label></div></fieldset>
     <fieldset><legend>Tọa độ nhà khách</legend>
@@ -1245,6 +1253,8 @@ function openCustomer(id){
     <label class="f">Ghi chú<textarea id="cNote" placeholder="Hẻm nhỏ, gửi xe ở đâu, giờ khách có nhà…">${esc(c.note)}</textarea></label>`;
   const foot=`<div class="row">${ex?'<button class="btn danger" type="button" id="cDel">Xóa</button>':''}</div><div class="row">${ex?'<button class="btn" type="button" id="cJob">+ Ghi ca</button>':''}<button class="btn" type="button" data-close>Hủy</button><button class="btn pri" type="button" id="cSave">Lưu</button></div>`;
   openSheet(ex?'Khách hàng':'Thêm khách hàng',body,root=>{
+    if(!ex)$('#cContract',root).addEventListener('input',e=>{const c2=custByContract(e.target.value);if(c2){toast(`SHĐ ${c2.contract} đã có (${c2.name}), đã mở thông tin khách`);openCustomer(c2.id);}});
+    else $('#cContract',root).addEventListener('input',e=>{const c2=custByContract(e.target.value,ex.id);const h=$('#cDupHint',root);if(h)h.textContent=c2?`SHĐ này đang thuộc khách ${c2.name}. Kiểm tra lại trước khi lưu.`:'';});
     const lat=$('#cLat',root),lng=$('#cLng',root);
     let src='paste',acc=null;
     [lat,lng].forEach(i=>i.addEventListener('input',()=>{src='paste';acc=null;}));
@@ -1741,6 +1751,7 @@ $('#v-danh-gia').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rm]');if(rm){const [Y,M]=rateMonth.split('-').map(Number);const d=new Date(Y,M-1+(+rm.dataset.rm),1);rateMonth=d.getFullYear()+'-'+pad2(d.getMonth()+1);renderRates();return;}
   const rf=e.target.closest('[data-rf]');if(rf){rateFilter=rf.dataset.rf;renderRates();return;}
   const ro=e.target.closest('[data-ropen]');if(ro&&!e.target.closest('button,a')){openRateSheet(ro.dataset.ropen);return;}
+  const zl=e.target.closest('[data-rzalo]');if(zl){const j=Store.jobs[zl.dataset.rzalo];if(j)copyText(rateMsg(j),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');return;}
   const mg=e.target.closest('[data-rmsg]');if(mg){const j=Store.jobs[mg.dataset.rmsg];if(!j)return;copyText(rateMsg(j),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');return;}
   const cp=e.target.closest('[data-copy-phone]');if(cp){copyText(cp.dataset.copyPhone,'Đã chép số điện thoại');return;}
   const rs=e.target.closest('[data-rset]');if(rs){setRate(rs.dataset.rset,{st:rs.dataset.v});toast(rs.dataset.v==='danhgia'?'Đã đánh giá, chạm sao để ghi số sao':'Chưa đánh giá');return;}
