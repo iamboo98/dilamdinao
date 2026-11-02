@@ -214,8 +214,48 @@ label.f textarea{min-height:70px;resize:vertical}
 .day-layout.collapsed .cal{padding:8px 10px}
 .day-layout.collapsed .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:759px){.day-layout.collapsed .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.wk{display:flex;align-items:stretch;gap:4px}
+.wk-days{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-width:0}
+.wk-nav{border:0;background:transparent;color:var(--muted);font-size:22px;width:26px;cursor:pointer;border-radius:8px}
+.wk-nav:hover{background:var(--surface-2)}
+.wk-d{border:1px solid transparent;background:var(--surface-2);border-radius:10px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;color:var(--ink);min-width:0}
+.wk-w{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.wk-n{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums}
+.wk-c{font-size:10px;color:var(--muted);white-space:nowrap}
+.wk-d.sun .wk-n{color:var(--bad)}
+.wk-d.today{border-color:var(--accent)}
+.wk-d[aria-pressed="true"]{background:var(--band);border-color:var(--accent)}
+.wk-d[aria-pressed="true"] .wk-n,.wk-d[aria-pressed="true"] .wk-w{color:#fff}
+.wk-d[aria-pressed="true"] .wk-c{color:var(--fiber);font-weight:600}
+.wk-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+.mcal{width:100%;max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,27,45,.10)}
+.mc-h{display:flex;align-items:center;gap:6px;background:var(--band);color:var(--band-ink);padding:10px 10px 10px 6px;border-bottom:3px solid var(--accent)}
+.mc-t{flex:1;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.mc-t b{font-family:var(--f-display);font-size:24px;text-transform:uppercase;letter-spacing:.02em}
+.mc-t small{font-size:12px;color:var(--band-muted)}
+.mc-nav{border:0;background:rgba(255,255,255,.1);color:#fff;width:36px;height:36px;border-radius:10px;font-size:22px;cursor:pointer}
+.mc-x{border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:8px;font-size:12px;font-weight:600;padding:6px 8px;cursor:pointer}
+.mc-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:10px}
+.mc-w{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:2px}
+.mc-w.sun{color:var(--bad)}
+.mc-d{border:1px solid var(--line);background:var(--surface);border-radius:10px;min-height:54px;padding:5px 5px 4px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;cursor:pointer;color:var(--ink);min-width:0}
+.mc-d:hover{border-color:var(--muted)}
+.mc-n{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.mc-d.sun .mc-n{color:var(--bad)}
+.mc-d.out{background:transparent;border-color:transparent;opacity:.4}
+.mc-d.today{border:2px solid var(--accent)}
+.mc-d[aria-pressed="true"]{background:var(--band);border:2px solid var(--accent)}
+.mc-d[aria-pressed="true"] .mc-n{color:#fff}
+.mc-b{display:flex;gap:3px;flex-wrap:wrap}
+.mc-b i,.lgd{font-style:normal;font-size:10px;font-weight:700;line-height:1;padding:2px 5px;border-radius:5px;color:var(--surface)}
+.mc-b i.tk,.lgd.tk{background:var(--t-deploy)} .mc-b i.bt,.lgd.bt{background:var(--t-maint)}
+.lgd{display:inline-block;width:10px;height:10px;padding:0;margin:0 4px 0 8px;vertical-align:-1px}
+.mc-f{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 12px 12px}
+@media (max-width:420px){.mc-d{min-height:46px;padding:4px 3px}.mc-b i{padding:1px 4px;font-size:9px}}
 .cal-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .cal-bar-d{font-weight:600;font-variant-numeric:tabular-nums;padding:0 4px;text-transform:capitalize}
+.caltop{width:100%;max-width:560px;margin:0 auto}
+.caltop .cal-d{min-height:46px}
 .cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
 .cal-w{font-size:11px;font-weight:600;color:var(--muted);text-align:center;padding:2px 0}
@@ -234,7 +274,7 @@ label.f textarea{min-height:70px;resize:vertical}
 .rfgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
 .rfgrid .inline-in{justify-content:space-between}
 .rfgrid .inline-in span{display:flex;align-items:center;gap:4px}
-.rcard{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rcard{cursor:pointer;display:flex;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .rcard .stripe{width:5px;flex:none;background:var(--tc)}
 .rc-main{flex:1;min-width:0;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
 .stars{display:inline-flex;gap:2px}
@@ -315,6 +355,7 @@ nav.tabs a[aria-current="page"]{color:var(--band-ink);background:rgba(255,255,25
   <!-- HÔM NAY -->
   <section class="view" id="v-hom-nay" hidden>
     <div class="ktv" id="ktvBadge"></div>
+    <div class="mcal" id="calTop" hidden></div>
     <div class="head-row">
       <div><div class="eyebrow" id="todayDow"></div><h1 class="vtitle" id="todayTitle"></h1></div>
       <div class="row">
@@ -348,7 +389,7 @@ nav.tabs a[aria-current="page"]{color:var(--band-ink);background:rgba(255,255,25
     <div class="chips" id="rateChips"></div>
     <div class="list" id="rateList"></div>
     <details class="panel" id="rateTplBox"><summary style="cursor:pointer;font-weight:600">Lời nhắn xin đánh giá</summary>
-      <div class="hint">Mỗi loại ca một lời nhắn. Dùng {ten} (tên khách), {hd} (số HĐ), {ngay} (ngày làm), {loi} (lỗi khách báo, chỉ ca bảo trì). Lời nhắn được lưu trên máy này.</div>
+      <div class="hint">Mỗi loại ca một lời nhắn. Dùng {ten} (tên khách), {hd} (số hợp đồng), {ngay} (ngày làm), {loi} (lỗi khách báo, ca bảo trì). Phần đặt trong [[ ]] tự bỏ đi khi thiếu thông tin. Chạm vào một ca ở trên để xem lời nhắn đã điền sẵn. Lời nhắn được lưu trên máy này.</div>
       <label class="f" style="color:var(--t-deploy)">Ca triển khai<textarea id="rateTpl_tk" data-tk="trien_khai" style="width:100%;min-height:120px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface);color:var(--ink)"></textarea></label>
       <div class="row"><button class="btn sm" type="button" data-tpl-reset="trien_khai">Về lời nhắn mẫu</button></div>
       <label class="f" style="color:var(--t-maint)">Ca bảo trì<textarea id="rateTpl_bt" data-tk="bao_tri" style="width:100%;min-height:120px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface);color:var(--ink)"></textarea></label>
@@ -657,25 +698,29 @@ function dayIndex(){
   return ix;
 }
 let calOpen=false;try{calOpen=localStorage.getItem('sokythuat.calOpen')==='1'}catch(e){}
-function setCalOpen(v){calOpen=v;try{localStorage.setItem('sokythuat.calOpen',v?'1':'0')}catch(e){}renderToday();}
+function setCalOpen(v){calOpen=v;try{localStorage.setItem('sokythuat.calOpen',v?'1':'0')}catch(e){}renderToday();if(v){const el=$('#calTop');const y=el.getBoundingClientRect().top+scrollY-($('.top').offsetHeight||0)-8;scrollTo({top:Math.max(0,y),behavior:'smooth'});}}
+function dayCounts(){const ix={};Object.values(Store.jobs).forEach(j=>{const d=doneAt(j);if(!d)return;const k=dayKey(d);const o=ix[k]||(ix[k]={tk:0,bt:0});if(j.type==='bao_tri')o.bt++;else o.tk++;});return ix;}
+const CAL_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>';
 function renderCal(){
-  $('.day-layout').classList.toggle('collapsed',!calOpen);
-  if(!calOpen){const sd=new Date(selDay+'T12:00:00');const tk=todayKey();
-    $('#cal').innerHTML=`<div class="cal-bar"><button class="btn sm" type="button" data-step="-1" aria-label="Ngày trước">‹ Ngày trước</button>
-      <button class="btn sm" type="button" data-step="1" aria-label="Ngày sau">Ngày sau ›</button>
-      ${selDay!==tk?'<button class="btn sm" type="button" data-cal="today">Hôm nay</button>':''}
-      <button class="btn sm" type="button" data-calopen="1" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Mở lịch</button></div>`;
+  $('.day-layout').classList.add('collapsed');$('#calTop').hidden=!calOpen;$('#cal').hidden=calOpen;
+  const ix=dayCounts();const tk=todayKey();const WD=['T2','T3','T4','T5','T6','T7','CN'];
+  if(!calOpen){const sd=new Date(selDay+'T12:00:00');const mon=new Date(sd);mon.setDate(sd.getDate()-((sd.getDay()+6)%7));
+    let days='';for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);const k=dayKey(d);const x=ix[k];const n=x?x.tk+x.bt:0;
+      days+=`<button type="button" class="wk-d${k===tk?' today':''}${i===6?' sun':''}" data-day="${k}" aria-pressed="${k===selDay}" aria-label="${d.toLocaleDateString('vi-VN')}${n?', '+n+' ca':''}"><span class="wk-w">${WD[i]}</span><span class="wk-n">${d.getDate()}</span><span class="wk-c">${n?n+' ca':'·'}</span></button>`;}
+    $('#cal').innerHTML=`<div class="wk"><button class="wk-nav" type="button" data-step="-7" aria-label="Tuần trước">‹</button><div class="wk-days">${days}</div><button class="wk-nav" type="button" data-step="7" aria-label="Tuần sau">›</button></div>
+      <div class="wk-foot"><span class="hint">Tháng ${sd.getMonth()+1}/${sd.getFullYear()}</span><span class="row" style="gap:6px">${selDay!==tk?'<button class="btn sm" type="button" data-cal="today">Hôm nay</button>':''}<button class="btn sm" type="button" data-calopen="1">${CAL_ICON}Xem cả tháng</button></span></div>`;
     return;}
-  const ix=dayIndex();const [Y,M]=calMonth.split('-').map(Number);const first=new Date(Y,M-1,1);
-  const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));const tk=todayKey();
+  const [Y,M]=calMonth.split('-').map(Number);const first=new Date(Y,M-1,1);const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  let mtk=0,mbt=0;Object.entries(ix).forEach(([k,o])=>{if(k.slice(0,7)===calMonth){mtk+=o.tk;mbt+=o.bt;}});
   let cells='';for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=dayKey(d);const inM=d.getMonth()===M-1;
-    if(i>=35&&!inM&&i%7===0)break;
-    const x=ix[k];const dots=x&&x.jobs?`<span class="dots">${x.jobs?`<i style="background:var(--t-deploy)"></i>`:''}</span>`:'<span class="dots"></span>';
-    cells+=`<button type="button" class="cal-d${inM?'':' out'}${k===tk?' today':''}" data-day="${k}" aria-pressed="${k===selDay}" aria-label="${d.toLocaleDateString('vi-VN')}${x?`, ${x.jobs} ca, ${x.coords} tọa độ`:''}"><span>${d.getDate()}</span>${dots}</button>`;}
-  const ml=first.toLocaleDateString('vi-VN',{month:'long',year:'numeric'});
-  $('#cal').innerHTML=`<div class="cal-h"><button class="btn sm" type="button" data-cal="-1" aria-label="Tháng trước">‹</button><b style="text-transform:capitalize">${esc(ml)}</b><button class="btn sm" type="button" data-cal="1" aria-label="Tháng sau">›</button></div>
-    <div class="cal-g">${['T2','T3','T4','T5','T6','T7','CN'].map(t=>`<span class="cal-w">${t}</span>`).join('')}${cells}</div>
-    <div class="row" style="justify-content:space-between"><span class="hint"><i class="lg" style="background:var(--t-deploy)"></i> có ca</span><span class="row" style="gap:6px">${selDay!==tk?'<button class="btn sm" type="button" data-cal="today">Về hôm nay</button>':''}<button class="btn sm" type="button" data-calopen="0">Thu gọn</button></span></div>`;
+    if(i>=35&&!inM&&i%7===0)break;const x=ix[k];
+    cells+=`<button type="button" class="mc-d${inM?'':' out'}${k===tk?' today':''}${i%7===6?' sun':''}" data-day="${k}" aria-pressed="${k===selDay}" aria-label="${d.toLocaleDateString('vi-VN')}${x?`, ${x.tk} ca triển khai, ${x.bt} ca bảo trì`:''}">
+      <span class="mc-n">${d.getDate()}</span><span class="mc-b">${x&&x.tk?`<i class="tk">${x.tk}</i>`:''}${x&&x.bt?`<i class="bt">${x.bt}</i>`:''}</span></button>`;}
+  $('#calTop').innerHTML=`<div class="mc-h"><button class="mc-nav" type="button" data-cal="-1" aria-label="Tháng trước">‹</button>
+      <div class="mc-t"><b>Tháng ${M}</b><small>${Y} · ${mtk+mbt} ca (TK ${mtk} · BT ${mbt})</small></div>
+      <button class="mc-nav" type="button" data-cal="1" aria-label="Tháng sau">›</button><button class="mc-x" type="button" data-calopen="0" aria-label="Thu gọn lịch">Thu gọn</button></div>
+    <div class="mc-g">${WD.map((t,i)=>`<span class="mc-w${i===6?' sun':''}">${t}</span>`).join('')}${cells}</div>
+    <div class="mc-f"><span class="hint"><i class="lgd tk"></i>Triển khai <i class="lgd bt"></i>Bảo trì</span>${selDay!==tk?'<button class="btn sm" type="button" data-cal="today">Về hôm nay</button>':''}</div>`;
 }
 function dayJobs(day){return jobsArr().filter(j=>doneAt(j)&&dayKey(doneAt(j))===day).reverse();}
 function dayCoords(day){const rows=[];Object.values(Store.customers).forEach(c=>coordHist(c).filter(e=>dayKey(e.at)===day).forEach(e=>rows.push({c,e})));return rows.sort((a,b)=>String(a.e.at).localeCompare(String(b.e.at)));}
@@ -689,7 +734,7 @@ function renderBadge(today){
     <div class="ktv-id"><span class="eyebrow">Thẻ kỹ thuật viên</span><b>${pf.name?esc(pf.name):'Chưa nhập tên'}</b>
       <span class="hint">${[pf.code?'MNV <span class="mono">'+esc(pf.code)+'</span>':'',esc(pf.team||''),pf.phone?'<span class="mono">'+esc(pf.phone)+'</span>':''].filter(Boolean).join(' · ')||'Bấm “Sửa” để nhập mã NV, đội, khu vực'}</span></div>
     <button class="btn sm" type="button" id="ktvEdit">Sửa</button></div>
-    <div class="ktv-stats"><span><b>${today.filter(j=>j.type==='trien_khai').length}</b> TK hôm nay</span><span><b>${today.filter(j=>j.type==='bao_tri').length}</b> BT hôm nay</span><span class="${waiting?'warn':''}"><b>${waiting}</b> ca chưa xin đánh giá</span></div>`;
+    <div class="ktv-stats"><span><b>${today.filter(j=>j.type==='trien_khai').length}</b> TK hôm nay</span><span><b>${today.filter(j=>j.type==='bao_tri').length}</b> BT hôm nay</span><span class="${waiting?'warn':''}"><b>${waiting}</b> ca chưa đánh giá (7 ngày)</span></div>`;
 }
 function openProfile(){const pf=profile();
   openSheet('Thẻ kỹ thuật viên',`<div class="grid2"><label class="f">Họ tên<input id="pfName" value="${esc(pf.name||'')}" autocomplete="name"></label><label class="f">Mã nhân viên<input id="pfCode" value="${esc(pf.code||'')}" class="mono"></label>
@@ -871,17 +916,43 @@ function openDataSheet(){
 }
 
 /* ===================== CÔNG VIỆC ===================== */
-const RATE_ST={chua:{l:'Chưa xin',c:'s-cho'},daxin:{l:'Đã xin, chờ KH',c:'s-dang'},danhgia:{l:'Đã đánh giá',c:'p-ok'},khong:{l:'KH không đánh giá',c:'p-bad'}};
+const RATE_ST={chua:{l:'Chưa đánh giá',c:'p-warn'},danhgia:{l:'Đã đánh giá',c:'p-ok'}};
 const RATE_TPL_DEF={
-  trien_khai:'Chào anh/chị {ten}, em là kỹ thuật viên vừa lắp đặt Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Mạng và Wi-Fi đã hoạt động ổn định, anh/chị dùng có gì chưa rõ cứ nhắn em nhé. Anh/chị vui lòng mở ứng dụng Hi FPT và dành 1 phút đánh giá buổi lắp đặt giúp em. Em cảm ơn anh/chị!',
-  bao_tri:'Chào anh/chị {ten}, em là kỹ thuật viên vừa xử lý sự cố Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Lỗi đã được khắc phục, nếu mạng còn chập chờn anh/chị nhắn em để em hỗ trợ ngay. Anh/chị vui lòng mở ứng dụng Hi FPT và đánh giá giúp em lần bảo trì này nhé. Em cảm ơn anh/chị!'};
-const rateOf=j=>Object.assign({st:'chua',stars:0},j.rate||{});
+  trien_khai:'Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã lắp đặt Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]].\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em buổi lắp đặt vừa rồi ạ. Mỗi đánh giá của anh/chị là sự động viên rất lớn với em.\nTrong quá trình sử dụng có gì chưa ổn, anh/chị cứ nhắn em, em hỗ trợ ngay ạ. Em cảm ơn anh/chị nhiều!',
+  bao_tri:'Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]].\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em lần hỗ trợ này ạ. Đánh giá của anh/chị giúp em làm việc tốt hơn mỗi ngày.\nNếu mạng còn chập chờn, anh/chị cứ nhắn em, em qua xử lý ngay ạ. Em cảm ơn anh/chị nhiều!'};
+const rateOf=j=>{const r=Object.assign({st:'chua',stars:0},j.rate||{});if(r.st!=='danhgia')r.st='chua';return r;};
 const tplKey=t=>'sokythuat.rateTpl.'+(t==='bao_tri'?'bt':'tk');
+const RATE_OLD=['Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã lắp đặt Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]]. Hiện mạng và Wi-Fi đã hoạt động ổn định ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá chất lượng lắp đặt giúp em nhé. Trong quá trình sử dụng có gì chưa ổn, anh/chị cứ nhắn em để em hỗ trợ.\nEm cảm ơn anh/chị!','Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]]. Sự cố đã được khắc phục ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá lần hỗ trợ này giúp em nhé. Nếu mạng còn chập chờn, anh/chị nhắn em để em xử lý ngay.\nEm cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa lắp đặt Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Mạng và Wi-Fi đã hoạt động ổn định, anh/chị dùng có gì chưa rõ cứ nhắn em nhé. Anh/chị vui lòng mở ứng dụng Hi FPT và dành 1 phút đánh giá buổi lắp đặt giúp em. Em cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa xử lý sự cố Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Lỗi đã được khắc phục, nếu mạng còn chập chờn anh/chị nhắn em để em hỗ trợ ngay. Anh/chị vui lòng mở ứng dụng Hi FPT và đánh giá giúp em lần bảo trì này nhé. Em cảm ơn anh/chị!'].map(x=>x.replace(/\\n/g,'\n'));
+(()=>{try{['tk','bt'].forEach(k=>{const v=localStorage.getItem('sokythuat.rateTpl.'+k);if(v&&RATE_OLD.includes(v))localStorage.removeItem('sokythuat.rateTpl.'+k);});}catch(e){}})();
 function rateTpl(t){t=t==='bao_tri'?'bao_tri':'trien_khai';try{return localStorage.getItem(tplKey(t))||RATE_TPL_DEF[t]}catch(e){return RATE_TPL_DEF[t]}}
-function rateMsg(j){const c=custOf(j);return rateTpl(j.type).replace(/\{ten\}/g,c.name||'').replace(/\{hd\}/g,c.contract||'').replace(/\{loai\}/g,j.type==='bao_tri'?'bảo trì':'lắp đặt').replace(/\{loi\}/g,(j.issue||(j.bt&&j.bt.nguyennhan)||'').toLowerCase()).replace(/\{ngay\}/g,fmtFull(doneAt(j)));}
+function rateMsg(j){const c=custOf(j);
+  const v={ten:c.name||'',hd:c.contract||'',ngay:fmtFull(doneAt(j)),loai:j.type==='bao_tri'?'bảo trì':'lắp đặt',loi:(j.issue||(j.bt&&j.bt.nguyennhan)||'').replace(/\s*\(.*?\)\s*/g,' ').trim().replace(/^(\S)(?![\w-]*[A-Z])/,ch=>ch.toLowerCase())};
+  let t=rateTpl(j.type).replace(/\[\[(.*?)\]\]/g,(_,inner)=>{const ks=[...inner.matchAll(/\{(\w+)\}/g)].map(x=>x[1]);return ks.some(k=>k in v&&!v[k])?'':inner;});
+  if(!v.hd)t=t.replace(/\s*[(,]?\s*(?:SHĐ|HĐ|số hợp đồng)\s*:?\s*\{hd\}\)?/gi,'');
+  return t.replace(/\{(ten|hd|ngay|loai|loi)\}/g,(_,k)=>v[k]);}
+function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j);const r=rateOf(j);const ph=(c.phone||'').replace(/\D/g,'');
+  openSheet('Xin đánh giá Hi FPT',`<div class="infobox">
+      <div class="kv"><span>Khách hàng</span><b>${esc(c.name)}</b></div>
+      <div class="kv"><span>Số hợp đồng</span><span class="mono">${esc(c.contract||'—')}</span></div>
+      <div class="kv"><span>Loại ca · ngày</span><span>${esc(typeLabel(j.type))} · ${esc(fmtFull(doneAt(j)))}</span></div>
+      <div class="kv"><span>Điện thoại</span><span class="mono">${esc(c.phone||'—')}</span></div>
+      <div class="kv"><span>Trạng thái</span><span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span></div></div>
+    ${c.contract?'':'<div class="notice">Khách chưa có số hợp đồng nên lời nhắn bỏ phần SHĐ. Bấm “Sửa thông tin khách” để thêm.</div>'}
+    <label class="f">Lời nhắn (đã điền tên, SHĐ, ngày; sửa riêng cho ca này nếu cần)<textarea id="rmText" style="min-height:190px">${esc(rateMsg(j))}</textarea></label>`,
+    root=>{const txt=()=>$('#rmText',root).value.trim();
+      $('#rmCopy',root).addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');});
+      $('#rmZalo',root)?.addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn, dán vào khung chat Zalo');});
+      $('#rmSms',root)?.addEventListener('pointerdown',()=>{$('#rmSms',root).href=`sms:${ph}?body=${encodeURIComponent(txt())}`;});
+      $('#rmCust',root).addEventListener('click',()=>openCustomer(c.id));
+    },`<button class="btn sm" type="button" id="rmCust">Sửa thông tin khách</button><div class="row">
+      ${ph?`<a class="btn" id="rmZalo" href="https://zalo.me/${ph}" target="_blank" rel="noopener">Mở Zalo</a>`:''}
+      ${ph&&!isEmbedded?`<a class="btn" id="rmSms" href="sms:${ph}">Gửi SMS</a>`:''}
+      <button class="btn pri" type="button" id="rmCopy">Chép lời nhắn</button></div>`);
+  const sf=$('.sheet-f');if(sf){const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent=r.st==='danhgia'?'Chuyển về chưa đánh giá':'✓ Đã đánh giá';
+    b.addEventListener('click',()=>{setRate(id,{st:r.st==='danhgia'?'chua':'danhgia'});closeSheet();toast(r.st==='danhgia'?'Chưa đánh giá':'Đã đánh giá, chạm sao để ghi số sao');});sf.firstElementChild.after(b);}}
 function starsHTML(n,jid){return `<span class="stars" ${jid?`data-stars="${esc(jid)}"`:''}>${[1,2,3,4,5].map(i=>`<button type="button" class="star${i<=n?' on':''}" data-star="${i}" aria-label="${i} sao">★</button>`).join('')}</span>`;}
 function setRate(id,patch){const j=JSON.parse(JSON.stringify(Store.jobs[id]));if(!j)return;const r=Object.assign(rateOf(j),patch);
-  if(patch.st==='daxin'&&!r.askedAt)r.askedAt=new Date().toISOString();if(patch.st==='danhgia'&&!r.ratedAt)r.ratedAt=new Date().toISOString();if(patch.st&&patch.st!=='danhgia')r.stars=0;
+if(patch.st==='danhgia'&&!r.ratedAt)r.ratedAt=new Date().toISOString();if(patch.st&&patch.st!=='danhgia')r.stars=0;
   j.rate=r;Store.put('jobs',j);renderAll();}
 let rateMonth=todayKey().slice(0,7),rateFilter='chua';
 function renderRates(){
@@ -891,27 +962,24 @@ function renderRates(){
   const cnt=k=>all.filter(j=>rateOf(j).st===k).length;const rated=all.filter(j=>rateOf(j).st==='danhgia');
   const withStars=rated.filter(j=>rateOf(j).stars>0);const avg=withStars.length?withStars.reduce((a,j)=>a+rateOf(j).stars,0)/withStars.length:0;
   const low=withStars.filter(j=>rateOf(j).stars<=3).length;
-  $('#rateKpis').innerHTML=`<div class="kpi"><span class="tag">Ca trong tháng</span><span class="n">${all.length}</span><span class="hint">chưa xin ${cnt('chua')}</span></div>
-    <div class="kpi" style="--tc:var(--accent)"><span class="tag" style="color:var(--accent)">Đã xin</span><span class="n">${all.length-cnt('chua')}</span><span class="hint">${all.length?Math.round((all.length-cnt('chua'))/all.length*100):0}% số ca</span></div>
-    <div class="kpi" style="--tc:var(--ok)"><span class="tag" style="color:var(--ok)">Đã đánh giá</span><span class="n">${rated.length}</span><span class="hint">${all.length?Math.round(rated.length/all.length*100):0}% số ca · từ chối ${cnt('khong')}</span></div>
+  $('#rateKpis').innerHTML=`<div class="kpi"><span class="tag">Ca trong tháng</span><span class="n">${all.length}</span><span class="hint">TK ${all.filter(j=>j.type==='trien_khai').length} · BT ${all.filter(j=>j.type==='bao_tri').length}</span></div>
+    <div class="kpi" style="--tc:var(--warn)"><span class="tag" style="color:var(--warn)">Chưa đánh giá</span><span class="n">${cnt('chua')}</span><span class="hint">${all.length?Math.round(cnt('chua')/all.length*100):0}% số ca</span></div>
+    <div class="kpi" style="--tc:var(--ok)"><span class="tag" style="color:var(--ok)">Đã đánh giá</span><span class="n">${rated.length}</span><span class="hint">${all.length?Math.round(rated.length/all.length*100):0}% số ca</span></div>
     <div class="kpi" style="--tc:var(--fiber)"><span class="tag">Điểm trung bình</span><span class="n">${withStars.length?avg.toFixed(1):'–'}<small> ★</small></span><span class="hint">${low?low+' đánh giá ≤ 3★':'không có đánh giá thấp'}</span></div>`;
-  $('#rateChips').innerHTML=[['chua','Chưa xin'],['daxin','Chờ KH'],['danhgia','Đã đánh giá'],['khong','Không đánh giá'],['','Tất cả']].map(([k,l])=>`<button class="chip" type="button" data-rf="${k}" aria-pressed="${rateFilter===k}">${l} · ${k?cnt(k):all.length}</button>`).join('');
+  $('#rateChips').innerHTML=[['chua','Chưa đánh giá'],['danhgia','Đã đánh giá'],['','Tất cả']].map(([k,l])=>`<button class="chip" type="button" data-rf="${k}" aria-pressed="${rateFilter===k}">${l} · ${k?cnt(k):all.length}</button>`).join('');
   const q=$('#rateSearch').value.trim().toLowerCase();const qn=q.replace(/\D/g,'');
   const list=all.filter(j=>{if(rateFilter&&rateOf(j).st!==rateFilter)return false;if(!q)return true;const c=custOf(j);return c.name.toLowerCase().includes(q)||(c.contract||'').toLowerCase().includes(q)||(qn&&(c.phone||'').replace(/\D/g,'').includes(qn));});
-  if(!list.length){$('#rateList').innerHTML=`<div class="empty">${all.length?(rateFilter==='chua'?'Đã xin đánh giá hết các ca trong tháng.':'Không có ca nào ở mục này.'):'Tháng này chưa có ca nào. Ca được ghi ở tab Lịch ngày.'}</div>`;return;}
+  if(!list.length){$('#rateList').innerHTML=`<div class="empty">${all.length?(rateFilter==='chua'?'Tất cả các ca trong tháng đã được đánh giá.':'Chưa có ca nào được đánh giá.'):'Tháng này chưa có ca nào. Ca được ghi ở tab Lịch ngày.'}</div>`;return;}
   $('#rateList').innerHTML=list.map(j=>{const c=custOf(j);const r=rateOf(j);const d=doneAt(j);
-    return `<div class="rcard c-${esc(j.type)}"><span class="stripe"></span><div class="rc-main">
+    return `<div class="rcard c-${esc(j.type)}" data-ropen="${esc(j.id)}"><span class="stripe"></span><div class="rc-main">
       <div class="job-top"><span class="tag">${esc(typeLabel(j.type))} · ${esc(fmtFull(d))}</span><span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span></div>
       <div class="job-name">${esc(c.name)} ${flagPill(c)}</div>
-      <div class="job-sub">${[c.contract?'HĐ '+esc(c.contract):'',c.phone?'<span class="mono">'+esc(c.phone)+'</span>':''].filter(Boolean).join(' · ')}${r.askedAt?` · xin lúc ${esc(fmtFull(r.askedAt).slice(0,5))} ${fmtTime(r.askedAt)}`:''}</div>
+      <div class="job-sub">${[c.contract?'HĐ '+esc(c.contract):'',c.phone?'<span class="mono">'+esc(c.phone)+'</span>':''].filter(Boolean).join(' · ')}</div>
       ${r.st==='danhgia'?`<div class="row" style="gap:8px">${starsHTML(r.stars,j.id)}<span class="hint">${r.stars?'':'Chạm để chọn số sao KH chấm'}</span></div>`:''}
       <div class="row" style="gap:6px">
         <button class="btn sm${r.st==='chua'?' pri':''}" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button>
         ${c.phone?`<button class="btn sm" type="button" data-copy-phone="${esc(c.phone)}">Chép SĐT</button>`:''}
-        ${r.st!=='daxin'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="daxin">Đã xin</button>`:''}
-        ${r.st!=='danhgia'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="danhgia">KH đã đánh giá</button>`:''}
-        ${r.st!=='khong'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="khong">Không đánh giá</button>`:''}
-        ${r.st!=='chua'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="chua">Đặt lại</button>`:''}
+        ${r.st==='chua'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="danhgia">✓ Đã đánh giá</button>`:`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="chua">Chuyển về chưa đánh giá</button>`}
       </div></div></div>`;}).join('');
 }
 
@@ -969,6 +1037,7 @@ function openJob(id,preset){
   const body=`
     <fieldset><legend>Loại việc</legend>${segHTML('fType',Object.entries(TYPES).map(([k,T])=>[k,T.label]),j.type)}</fieldset>
     <fieldset><legend>Khách hàng</legend>
+      <label class="f">Tìm khách theo số hợp đồng, tên hoặc SĐT<input id="fCustQ" type="search" autocomplete="off" placeholder="VD: SGH123456"></label><div class="hint" id="fCustQHint"></div>
       <label class="f">Chọn khách<select id="fCust"><option value="__new">+ Khách hàng mới…</option>${custs.map(c=>`<option value="${esc(c.id)}" ${c.id===j.customerId?'selected':''}>${esc(c.name)}${c.contract?' · '+esc(c.contract):''}</option>`).join('')}</select></label>
       <div id="newCustBox" class="grid2">
         <label class="f">Họ tên<input id="nName" autocomplete="off"></label>
@@ -1043,6 +1112,16 @@ function openJob(id,preset){
     drawType();
     const sel=$('#fCust',root);
     if(!j.customerId&&!custs.length) sel.value='__new'; else if(!j.customerId) sel.value=custs[0]?custs[0].id:'__new';
+    {const NEW='<option value="__new">+ Khách hàng mới…</option>';
+      const opts=custs.map(c=>({id:c.id,label:c.name+(c.contract?' · '+c.contract:''),hd:(c.contract||'').toLowerCase().replace(/\s/g,''),key:((c.contract||'')+' '+c.name).toLowerCase(),ph:(c.phone||'').replace(/\D/g,'')}));
+      $('#fCustQ',root).addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();const qd=q.replace(/\s/g,'');const qn=q.replace(/\D/g,'');const h=$('#fCustQHint',root);const cur=sel.value;
+        const list=!q?opts:opts.filter(o=>o.hd.includes(qd)||o.key.includes(q)||(qn.length>=3&&o.ph.includes(qn))).sort((a,b)=>(b.hd===qd)-(a.hd===qd)||(b.hd.startsWith(qd))-(a.hd.startsWith(qd)));
+        sel.innerHTML=NEW+list.map(o=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join('');
+        sel.value=q?(list[0]?list[0].id:'__new'):(opts.some(o=>o.id===cur)||cur==='__new'?cur:(opts[0]?opts[0].id:'__new'));
+        if(q&&!list.length&&/\d/.test(q)){const nc=$('#nContract',root);if(nc&&!nc.value)nc.value=e.target.value.trim().toUpperCase();}
+        h.className=q&&!list.length?'hint bad':'hint';h.textContent=q?(list.length?`Tìm thấy ${list.length} khách${list.length>1?', đã chọn khách khớp nhất':''}.`:'Chưa có khách này. Nhập thông tin để tạo khách mới.'):'';
+        if(sel.value!==cur||q)sel.dispatchEvent(new Event('change'));});
+      if(!ex&&!preset?.customerId)setTimeout(()=>$('#fCustQ',root).focus(),60);}
     const showCust=()=>{const isNew=sel.value==='__new';$('#newCustBox',root).hidden=!isNew;const c=Store.customers[sel.value];
       $('#custInfo',root).innerHTML=c?`<div class="infobox">${c.flag&&FLAG_LV[c.flag.level]?`<div class="flagwarn ${c.flag.level}">${flagPill(c)} ${esc((c.flag.reasons||[]).join(', '))}${c.flag.note?' · '+esc(c.flag.note):''}</div>`:''}
         <div class="kv"><span>Điện thoại</span><span class="row"><span class="mono">${esc(c.phone||'—')}</span>${c.phone?`<button class="btn sm" type="button" data-copy="${esc(c.phone)}">Chép</button>`:''}</span></div>
@@ -1315,7 +1394,8 @@ function openFlag(cid){
   const custs=Object.values(Store.customers).sort((a,b)=>a.name.localeCompare(b.name,'vi'));
   if(!custs.length){toast('Chưa có khách hàng nào. Ghi ca trước để tạo khách.');return;}
   const c0=cid?Store.customers[cid]:null;const fg=Object.assign({level:'ham',reasons:[],note:''},c0&&c0.flag||{});
-  const body=`<label class="f">Khách hàng<select id="flCust">${c0?'':'<option value="">— Chọn khách —</option>'}${custs.map(c=>`<option value="${esc(c.id)}" ${c0&&c.id===c0.id?'selected':''}>${esc(c.name)}${c.contract?' · '+esc(c.contract):''}</option>`).join('')}</select></label>
+  const body=`<label class="f">Tìm khách theo số hợp đồng, tên hoặc SĐT<input id="flSearch" type="search" autocomplete="off" placeholder="VD: SGH123456" value=""></label><div class="hint" id="flSearchHint"></div>
+    <label class="f">Khách hàng<select id="flCust">${c0?'':'<option value="">— Chọn khách —</option>'}${custs.map(c=>`<option value="${esc(c.id)}" ${c0&&c.id===c0.id?'selected':''}>${esc(c.name)}${c.contract?' · '+esc(c.contract):''}</option>`).join('')}</select></label>
     <div id="flInfo"></div>
     <fieldset><legend>Mức độ</legend>${segHTML('flLv',[['luuy','Cần lưu ý'],['ham','Khách hãm']],fg.level)}</fieldset>
     <fieldset><legend>Lý do</legend><div class="chips" id="flReasons">${FLAG_REASONS.map(r=>`<button class="chip" type="button" data-rs="${esc(r)}" aria-pressed="${(fg.reasons||[]).includes(r)}">${esc(r)}</button>`).join('')}</div></fieldset>
@@ -1326,6 +1406,15 @@ function openFlag(cid){
     $('#flReasons',root).addEventListener('click',e=>{const b=e.target.closest('[data-rs]');if(b)b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');});
     const info=()=>{const c=Store.customers[$('#flCust',root).value];$('#flInfo',root).innerHTML=c?`<div class="infobox"><div class="kv"><span>Số HĐ</span><span class="mono">${esc(c.contract||'—')}</span></div><div class="kv"><span>Địa chỉ</span><span>${esc(c.address||'—')}</span></div><div class="kv"><span>Số ca</span><span>TK ${casesOf(c.id).filter(j=>j.type==='trien_khai').length} · BT ${casesOf(c.id).filter(j=>j.type==='bao_tri').length} (6 tháng: ${btCount6m(c.id)})</span></div></div>`:'';};
     $('#flCust',root).addEventListener('change',info);info();
+    const sel=$('#flCust',root);const allOpts=custs.map(c=>({id:c.id,label:c.name+(c.contract?' · '+c.contract:''),key:((c.contract||'')+' '+c.name+' '+(c.phone||'')).toLowerCase(),hd:(c.contract||'').toLowerCase().replace(/\s/g,''),ph:(c.phone||'').replace(/\D/g,'')}));
+    $('#flSearch',root).addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();const qd=q.replace(/\s/g,'');const qn=q.replace(/\D/g,'');const h=$('#flSearchHint',root);
+      const list=!q?allOpts:allOpts.filter(o=>o.hd.includes(qd)||o.key.includes(q)||(qn.length>=3&&o.ph.includes(qn)))
+        .sort((a,b)=>(b.hd===qd)-(a.hd===qd)||(b.hd.startsWith(qd))-(a.hd.startsWith(qd)));
+      const cur=sel.value;
+      sel.innerHTML=(list.length?'':'<option value="">— Không tìm thấy —</option>')+list.map(o=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join('');
+      if(list.length)sel.value=list.some(o=>o.id===cur)&&q===''?cur:list[0].id;
+      h.className=list.length?'hint':'hint bad';h.textContent=q?(list.length?`Tìm thấy ${list.length} khách${list.length>1?', đã chọn khách khớp nhất':''}.`:'Không có khách nào khớp. Kiểm tra lại số hợp đồng.'):'';info();});
+    if(!c0)setTimeout(()=>$('#flSearch',root).focus(),50);
     $('#flSave',root).addEventListener('click',()=>{const id=$('#flCust',root).value;if(!id){toast('Chọn khách hàng');return;}
       const c=JSON.parse(JSON.stringify(Store.customers[id]));
       c.flag={level:getLv()||'ham',reasons:$$('#flReasons [aria-pressed="true"]',root).map(b=>b.dataset.rs),note:$('#flNote',root).value.trim(),at:(c.flag&&c.flag.at)||new Date().toISOString()};
@@ -1656,9 +1745,10 @@ $('#rateTplBox').addEventListener('click',e=>{const b=e.target.closest('[data-tp
 $('#v-danh-gia').addEventListener('click',e=>{
   const rm=e.target.closest('[data-rm]');if(rm){const [Y,M]=rateMonth.split('-').map(Number);const d=new Date(Y,M-1+(+rm.dataset.rm),1);rateMonth=d.getFullYear()+'-'+pad2(d.getMonth()+1);renderRates();return;}
   const rf=e.target.closest('[data-rf]');if(rf){rateFilter=rf.dataset.rf;renderRates();return;}
-  const mg=e.target.closest('[data-rmsg]');if(mg){const j=Store.jobs[mg.dataset.rmsg];if(!j)return;copyText(rateMsg(j),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');if(rateOf(j).st==='chua')setRate(j.id,{st:'daxin'});return;}
+  const ro=e.target.closest('[data-ropen]');if(ro&&!e.target.closest('button,a')){openRateSheet(ro.dataset.ropen);return;}
+  const mg=e.target.closest('[data-rmsg]');if(mg){const j=Store.jobs[mg.dataset.rmsg];if(!j)return;copyText(rateMsg(j),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');return;}
   const cp=e.target.closest('[data-copy-phone]');if(cp){copyText(cp.dataset.copyPhone,'Đã chép số điện thoại');return;}
-  const rs=e.target.closest('[data-rset]');if(rs){setRate(rs.dataset.rset,{st:rs.dataset.v});toast(RATE_ST[rs.dataset.v].l);return;}
+  const rs=e.target.closest('[data-rset]');if(rs){setRate(rs.dataset.rset,{st:rs.dataset.v});toast(rs.dataset.v==='danhgia'?'Đã đánh giá, chạm sao để ghi số sao':'Chưa đánh giá');return;}
   const st=e.target.closest('[data-star]');if(st){const w=st.closest('[data-stars]');if(w)setRate(w.dataset.stars,{stars:+st.dataset.star});}
 });
 $('#custSearch').addEventListener('input',renderCustomers);
