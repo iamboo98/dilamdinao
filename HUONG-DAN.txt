@@ -19,3 +19,24 @@ CẬP NHẬT PHIÊN BẢN MỚI
 SAO LƯU
 - Bấm nút "Dữ liệu" > "Tải file sao lưu đầy đủ" mỗi tuần.
 - Đổi máy: tải file trên máy cũ, mở app trên máy mới > Dữ liệu > Khôi phục từ file.
+
+ĐĂNG NHẬP GOOGLE & ĐỒNG BỘ NHIỀU MÁY (làm 1 lần, miễn phí)
+1. Vào console.firebase.google.com > Add project (tạo dự án, có thể tắt Google Analytics).
+2. Build > Authentication > Get started > Sign-in method > bật Google > Save.
+3. Authentication > Settings > Authorized domains > Add domain: iamboo98.github.io
+4. Build > Firestore Database > Create database (vị trí asia-southeast1, chế độ production).
+   Tab Rules: dán quy tắc sau rồi bấm Publish:
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid}/{document=**} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+5. Project settings (bánh răng) > Your apps > biểu tượng Web </> > đặt tên > Register app.
+   Chép đoạn "const firebaseConfig = { ... }".
+6. Mở app > nút Dữ liệu > Bật đăng nhập Google > dán đoạn firebaseConfig > Lưu cấu hình.
+   (Hoặc gửi đoạn này cho người làm app để gắn sẵn vào app, khi đó mọi máy không cần dán nữa.)
+7. Bấm "Đăng nhập bằng Google". Dữ liệu đang có trên máy sẽ được đưa lên tài khoản.
+   Các máy khác chỉ cần mở app và đăng nhập cùng tài khoản là có đủ dữ liệu.
