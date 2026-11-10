@@ -48,6 +48,7 @@ body{font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoot
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--band)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono,textarea{font-variant-ligatures:none;font-feature-settings:'liga' 0,'calt' 0}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.92em}
 h1,h2,h3{margin:0;text-wrap:balance}
 
@@ -333,6 +334,13 @@ nav.tabs a[aria-current="page"]{color:var(--band-ink);background:rgba(255,255,25
 .acct{display:flex;align-items:center;gap:12px}
 .acct img{width:44px;height:44px;border-radius:50%;flex:none}
 .sync{cursor:pointer}
+.rate-filter{display:flex;flex-direction:column;gap:8px}
+.rate-filter .seg button{flex:1}
+.qbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:var(--r);padding:12px 14px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.qprog{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.qprog span{display:block;height:100%;background:var(--accent)}
+#rmXh button,#qXh button{min-width:44px}
 .flagwarn{border-radius:6px;padding:6px 10px;font-size:13px;background:var(--warn-bg)}
 .flagwarn.ham{background:var(--bad-bg)}
 .flagcard.ham{border-left:4px solid var(--bad)} .flagcard.luuy{border-left:4px solid var(--warn)}
@@ -390,10 +398,14 @@ nav.tabs a[aria-current="page"]{color:var(--band-ink);background:rgba(255,255,25
   <section class="view" id="v-danh-gia" hidden>
     <div class="head-row">
       <div><div class="eyebrow">Hi FPT</div><h1 class="vtitle">Xin đánh giá</h1></div>
-      <div class="row"><button class="btn sm" type="button" data-rm="-1" aria-label="Tháng trước">‹</button><b id="rateMonth" style="min-width:110px;text-align:center"></b><button class="btn sm" type="button" data-rm="1" aria-label="Tháng sau">›</button></div>
+    </div>
+    <div class="rate-filter">
+      <div class="seg" id="rateView"><button type="button" data-rv="de-xuat">Đề xuất xin (đủ 48h)</button><button type="button" data-rv="ngay">Theo ngày</button></div>
+      <div class="row" id="rateDayNav" style="gap:6px"><button class="btn sm" type="button" data-rd="-1" aria-label="Ngày trước">‹</button><input type="date" id="rateDay" class="sel" style="min-height:36px"><button class="btn sm" type="button" data-rd="1" aria-label="Ngày sau">›</button><button class="btn sm" type="button" data-rd="0">Hôm nay</button></div>
     </div>
     <div class="kpis" id="rateKpis"></div>
     <div class="toolbar"><input class="search" id="rateSearch" type="search" placeholder="Tìm tên khách, số HĐ, SĐT…"></div>
+    <div id="rateQueue"></div>
     <div class="chips" id="rateChips"></div>
     <div class="list" id="rateList"></div>
     <details class="panel" id="rateTplBox"><summary style="cursor:pointer;font-weight:600">Lời nhắn xin đánh giá</summary>
@@ -549,6 +561,8 @@ const STATUS = {cho:'Chờ làm',dang:'Đang làm',hen:'Hẹn lại',xong:'Hoàn
 const FLAG_LV={ham:{label:'Khách hãm',cls:'p-bad'},luuy:{label:'Cần lưu ý',cls:'p-warn'}};
 const FLAG_REASONS=['Hay khiếu nại','Báo lỗi nhiều lần không rõ nguyên nhân','Đòi hỏi ngoài phạm vi dịch vụ','Khó hẹn lịch / thất hẹn','Thái độ gay gắt','Tự ý thay đổi thiết bị, dây','Không chịu ký biên bản','Khác'];
 const flagPill=c=>c&&c.flag&&FLAG_LV[c.flag.level]?`<span class="pill ${FLAG_LV[c.flag.level].cls}">${FLAG_LV[c.flag.level].label}</span>`:'';
+const clsCount=(cid,atIso,exceptId)=>{if(!cid)return 0;const at=new Date(atIso||Date.now());const from=new Date(at);from.setMonth(from.getMonth()-6);
+  return Object.values(Store.jobs).filter(j=>{if(j.customerId!==cid||j.type!=='bao_tri'||j.id===exceptId)return false;const d=new Date(doneAt(j));return d>=from&&d<=at;}).length;};
 const btCount6m=cid=>{const lim=new Date();lim.setMonth(lim.getMonth()-6);return Object.values(Store.jobs).filter(j=>j.customerId===cid&&j.type==='bao_tri'&&new Date(doneAt(j))>=lim).length;};
 const ISSUES = ['Mất mạng (đèn LOS đỏ)','Mạng chậm','Wi-Fi yếu một số phòng','Rớt mạng chập chờn','Hỏng / thay thiết bị','Chuyển vị trí modem','Khác'];
 
@@ -662,12 +676,18 @@ const Store={
 
 /* ===================== ĐĂNG NHẬP GOOGLE (Firebase) ===================== */
 /* Dán cấu hình Firebase của bạn vào đây, hoặc dán trong app: nút Dữ liệu → Tài khoản Google. */
-const FIREBASE_CONFIG=null;
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyAbmubrn447R49GDKWhH9Qn3c1pAP4zGnM",
+  authDomain:"sokythuat-c3078.firebaseapp.com",
+  projectId:"sokythuat-c3078",
+  storageBucket:"sokythuat-c3078.firebasestorage.app",
+  messagingSenderId:"375448380659",
+  appId:"1:375448380659:web:7fdd96b6bb22c8a5304386"};
 const FB_VER='10.12.2';
 function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=()=>rej(new Error('load '+src));document.head.appendChild(sc);});}
 function parseFbConfig(t){if(!t)return null;const o={};for(const m of String(t).matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']+)["']/g))o[m[1]]=m[2];return o.apiKey&&o.authDomain&&o.projectId&&o.appId?o:null;}
 const Cloud={user:null,fs:null,auth:null,ready:false,known:false,metaRef:null,metaUnsub:null,
-  config(){if(FIREBASE_CONFIG)return FIREBASE_CONFIG;try{return JSON.parse(localStorage.getItem('sokythuat.fbconfig')||'null')}catch(e){return null}},
+  config(){try{const c=JSON.parse(localStorage.getItem('sokythuat.fbconfig')||'null');if(c)return c;}catch(e){}return FIREBASE_CONFIG;},
   boot(){if(this.config())this.load().catch(e=>{this.known=true;renderSync();toast('Không tải được dịch vụ đăng nhập (cần mạng).');});},
   async load(){
     if(this.ready)return true;const cfg=this.config();if(!cfg||isEmbedded)return false;
@@ -722,6 +742,7 @@ function maybeShowLoginGate(){
 const G_ICON='<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.2l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5z"/><path fill="#FBBC05" d="M10.6 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>';
 function openCloudSetup(){
   openSheet('Bật đăng nhập Google',`<div class="hint" style="font-size:14px">Cần một dự án Firebase miễn phí của bạn. Làm một lần, sau đó mọi máy đều đăng nhập được.</div>
+    <a class="btn pri" href="https://console.firebase.google.com/" target="_blank" rel="noopener" style="align-self:flex-start">Mở Firebase Console ↗</a>
     <ol class="steps"><li>Vào <b>console.firebase.google.com</b>, tạo dự án mới (tắt Google Analytics cho nhanh).</li>
       <li><b>Build → Authentication → Get started</b>, bật nhà cung cấp <b>Google</b>.</li>
       <li>Trong Authentication → <b>Settings → Authorized domains</b>, thêm <span class="mono">${esc(location.hostname||'tên-miền-app')}</span>.</li>
@@ -735,7 +756,7 @@ service cloud.firestore {
     }
   }
 }</textarea></label><button class="btn sm" type="button" id="fbRulesCopy" style="align-self:flex-start">Chép quy tắc</button>
-    <label class="f">Dán firebaseConfig vào đây<textarea id="fbCfg" style="min-height:140px;font-family:var(--f-mono);font-size:12px" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;…&quot;,&#10;  authDomain: &quot;…&quot;,&#10;  projectId: &quot;…&quot;,&#10;  appId: &quot;…&quot;&#10;};">${Cloud.config()&&!FIREBASE_CONFIG?esc(JSON.stringify(Cloud.config(),null,1)):''}</textarea><span class="hint" id="fbCfgHint"></span></label>`,
+    <label class="f">Dán firebaseConfig vào đây<textarea id="fbCfg" style="min-height:140px;font-family:var(--f-mono);font-size:12px" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;…&quot;,&#10;  authDomain: &quot;…&quot;,&#10;  projectId: &quot;…&quot;,&#10;  appId: &quot;…&quot;&#10;};">${esc(JSON.stringify(Cloud.config()||'',null,1).replace(/^""$/,''))}</textarea><span class="hint" id="fbCfgHint"></span></label>`,
   root=>{$('#fbRulesCopy',root).addEventListener('click',()=>copyText($('#fbRules',root).value,'Đã chép quy tắc'));
     $('#fbSave',root).addEventListener('click',()=>{const cfg=parseFbConfig($('#fbCfg',root).value);const h=$('#fbCfgHint',root);
       if(!cfg){h.className='hint bad';h.textContent='Chưa đọc được cấu hình. Cần có apiKey, authDomain, projectId, appId.';return;}
@@ -838,25 +859,26 @@ function dayCoords(day){const rows=[];Object.values(Store.customers).forEach(c=>
 function profile(){try{return JSON.parse(localStorage.getItem('sokythuat.profile')||'{}')}catch(e){return {}}}
 function renderBadge(today){
   const pf=profile();const ini=(pf.name||'KTV').trim().split(/\s+/).slice(-2).map(w=>w[0]).join('').toUpperCase();
-  const all=jobsArr();const waiting=all.filter(j=>rateOf(j).st==='chua'&&daysSince(doneAt(j))<=7).length;
+  const all=jobsArr();const waiting=all.filter(j=>rateOf(j).st==='chua'&&isDue(j)&&daysSince(doneAt(j))<=30).length;
   $('#brandSub').textContent=pf.name?'KTV '+pf.name+(pf.code?' · '+pf.code:''):'Kỹ thuật viên hiện trường';
   $('#ktvBadge').innerHTML=`<div class="ktv-tape" aria-hidden="true"></div><div class="ktv-body">
     <span class="ktv-av">${pf.photo?`<img src="${pf.photo}" alt="Ảnh ${esc(pf.name||'KTV')}">`:esc(ini)}</span>
     <div class="ktv-id"><span class="eyebrow">Thẻ kỹ thuật viên</span><b>${pf.name?esc(pf.name):'Chưa nhập tên'}</b>
       <span class="hint">${[pf.code?'MNV <span class="mono">'+esc(pf.code)+'</span>':'',esc(pf.team||''),pf.phone?'<span class="mono">'+esc(pf.phone)+'</span>':''].filter(Boolean).join(' · ')||'Bấm “Sửa” để nhập mã NV, đội, khu vực'}</span></div>
     <button class="btn sm" type="button" id="ktvEdit">Sửa</button></div>
-    <div class="ktv-stats"><span><b>${today.filter(j=>j.type==='trien_khai').length}</b> TK hôm nay</span><span><b>${today.filter(j=>j.type==='bao_tri').length}</b> BT hôm nay</span><span class="${waiting?'warn':''}"><b>${waiting}</b> ca chưa đánh giá (7 ngày)</span></div>`;
+    <div class="ktv-stats"><span><b>${today.filter(j=>j.type==='trien_khai').length}</b> TK hôm nay</span><span><b>${today.filter(j=>j.type==='bao_tri').length}</b> BT hôm nay</span><span class="${waiting?'warn':''}"><b>${waiting}</b> ca đủ 48h chưa xin đánh giá</span></div>`;
 }
 function openProfile(){const pf=profile();
   openSheet('Thẻ kỹ thuật viên',`<div class="grid2"><label class="f">Họ tên<input id="pfName" value="${esc(pf.name||'')}" autocomplete="name"></label><label class="f">Mã nhân viên<input id="pfCode" value="${esc(pf.code||'')}" class="mono"></label>
-    <label class="f">Đội / khu vực<input id="pfTeam" value="${esc(pf.team||'')}" placeholder="VD: Đội 3 · Quận Gò Vấp"></label><label class="f">Số điện thoại<input id="pfPhone" type="tel" value="${esc(pf.phone||'')}"></label></div>
+    <label class="f">Đội / khu vực<input id="pfTeam" value="${esc(pf.team||'')}" placeholder="VD: Đội 3 · Quận Gò Vấp"></label><label class="f">Số điện thoại<input id="pfPhone" type="tel" value="${esc(pf.phone||'')}"></label>
+    <label class="f">Giới tính KTV (xưng anh/chị với khách nhỏ tuổi hơn)<select id="pfGender"><option value="nam" ${pf.gender!=='nu'?'selected':''}>Nam – xưng "anh"</option><option value="nu" ${pf.gender==='nu'?'selected':''}>Nữ – xưng "chị"</option></select></label></div>
     <div class="row" style="align-items:center;gap:12px"><span class="ktv-av" id="pfAv">${pf.photo?`<img src="${pf.photo}" alt="">`:'KTV'}</span>
       <label class="btn sm" for="pfPhoto" style="cursor:pointer">Chọn ảnh chân dung</label><input id="pfPhoto" type="file" accept="image/*" hidden><button class="btn sm" type="button" id="pfPhotoDel" ${pf.photo?'':'hidden'}>Bỏ ảnh</button></div>
     <div class="hint">Thông tin này hiện trên thẻ ở Lịch ngày và ở đầu báo cáo ngày.</div>`,root=>{
     let photo=pf.photo||'';
     $('#pfPhoto',root).addEventListener('change',async e=>{const fl=e.target.files[0];e.target.value='';if(!fl)return;try{photo=await avatarFrom(fl);$('#pfAv',root).innerHTML=`<img src="${photo}" alt="">`;$('#pfPhotoDel',root).hidden=false;}catch(err){toast('Không đọc được ảnh này');}});
     $('#pfPhotoDel',root).addEventListener('click',()=>{photo='';$('#pfAv',root).textContent='KTV';$('#pfPhotoDel',root).hidden=true;});
-    $('#pfSave',root).addEventListener('click',()=>{const v={name:$('#pfName',root).value.trim(),code:$('#pfCode',root).value.trim(),team:$('#pfTeam',root).value.trim(),phone:$('#pfPhone',root).value.trim(),photo};
+    $('#pfSave',root).addEventListener('click',()=>{const v={name:$('#pfName',root).value.trim(),code:$('#pfCode',root).value.trim(),team:$('#pfTeam',root).value.trim(),phone:$('#pfPhone',root).value.trim(),gender:$('#pfGender',root).value,photo};
       try{localStorage.setItem('sokythuat.profile',JSON.stringify(v))}catch(e){}Cloud.saveMeta();closeSheet();renderAll();toast('Đã lưu thẻ KTV');});
   },'<span></span><div class="row"><button class="btn" type="button" data-close>Hủy</button><button class="btn pri" type="button" id="pfSave">Lưu</button></div>');}
 function renderToday(){
@@ -889,7 +911,7 @@ function dayReport(){
     out+=`\n${T.label.toUpperCase()}: ${js.length} ca\n`;
     js.forEach(j=>{const c=custOf(j);
       out+=`- ${fmtTime(doneAt(j))} ${c.contract?'HĐ '+c.contract+' – ':''}${c.name}`;if(j.type==='bao_tri'&&j.issue)out+=` – ${j.issue}`;
-      {const r=rateOf(j);if(r.st!=='chua')out+=` – Hi FPT: ${RATE_ST[r.st].l}${r.st==='danhgia'&&r.stars?' '+r.stars+'★':''}`;}
+      {const r=rateOf(j);out+=` – Xin ĐG: ${RATE_ST[r.st].l.toLowerCase()}`;}
       if(j.note)out+=` – ${j.note}`;out+='\n';});
   });
   if(!list.length) out+='\nKhông có ca nào trong ngày.\n';
@@ -1034,23 +1056,38 @@ function openDataSheet(){
 }
 
 /* ===================== CÔNG VIỆC ===================== */
-const RATE_ST={chua:{l:'Chưa đánh giá',c:'p-warn'},danhgia:{l:'Đã đánh giá',c:'p-ok'}};
+const RATE_ST={chua:{l:'Chưa xin',c:'p-warn'},daxin:{l:'Đã xin',c:'p-ok'}};
+const H48=48*3600*1000;const dueAt=j=>new Date(new Date(doneAt(j)).getTime()+H48);const isDue=j=>Date.now()>=dueAt(j).getTime();
 const RATE_TPL_DEF={
   trien_khai:'Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã lắp đặt Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]].\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em buổi lắp đặt vừa rồi ạ. Mỗi đánh giá của anh/chị là sự động viên rất lớn với em.\nTrong quá trình sử dụng có gì chưa ổn, anh/chị cứ nhắn em, em hỗ trợ ngay ạ. Em cảm ơn anh/chị nhiều!',
-  bao_tri:'Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]].\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em lần hỗ trợ này ạ. Đánh giá của anh/chị giúp em làm việc tốt hơn mỗi ngày.\nNếu mạng còn chập chờn, anh/chị cứ nhắn em, em qua xử lý ngay ạ. Em cảm ơn anh/chị nhiều!'};
-const rateOf=j=>{const r=Object.assign({st:'chua',stars:0},j.rate||{});if(r.st!=='danhgia')r.st='chua';return r;};
+  bao_tri:'Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]].\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em lần hỗ trợ này ạ. Đánh giá của anh/chị giúp em làm việc tốt hơn mỗi ngày.\nEm cảm ơn anh/chị nhiều!'};
+const rateOf=j=>{const r=Object.assign({},j.rate||{});let st=r.req;if(!st)st=(r.sentAt||r.st==='danhgia')?'daxin':'chua';if(!RATE_ST[st])st='chua';r.st=st;return r;};
 const tplKey=t=>'sokythuat.rateTpl.'+(t==='bao_tri'?'bt':'tk');
-const RATE_OLD=['Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã lắp đặt Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]]. Hiện mạng và Wi-Fi đã hoạt động ổn định ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá chất lượng lắp đặt giúp em nhé. Trong quá trình sử dụng có gì chưa ổn, anh/chị cứ nhắn em để em hỗ trợ.\nEm cảm ơn anh/chị!','Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]]. Sự cố đã được khắc phục ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá lần hỗ trợ này giúp em nhé. Nếu mạng còn chập chờn, anh/chị nhắn em để em xử lý ngay.\nEm cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa lắp đặt Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Mạng và Wi-Fi đã hoạt động ổn định, anh/chị dùng có gì chưa rõ cứ nhắn em nhé. Anh/chị vui lòng mở ứng dụng Hi FPT và dành 1 phút đánh giá buổi lắp đặt giúp em. Em cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa xử lý sự cố Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Lỗi đã được khắc phục, nếu mạng còn chập chờn anh/chị nhắn em để em hỗ trợ ngay. Anh/chị vui lòng mở ứng dụng Hi FPT và đánh giá giúp em lần bảo trì này nhé. Em cảm ơn anh/chị!'].map(x=>x.replace(/\\n/g,'\n'));
+const RATE_OLD=['Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]].\\nEm xin phép nhờ anh/chị dành chút thời gian mở ứng dụng Hi FPT đánh giá giúp em lần hỗ trợ này ạ. Đánh giá của anh/chị giúp em làm việc tốt hơn mỗi ngày.\\nNếu mạng còn chập chờn, anh/chị cứ nhắn em, em qua xử lý ngay ạ. Em cảm ơn anh/chị nhiều!','Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã lắp đặt Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]]. Hiện mạng và Wi-Fi đã hoạt động ổn định ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá chất lượng lắp đặt giúp em nhé. Trong quá trình sử dụng có gì chưa ổn, anh/chị cứ nhắn em để em hỗ trợ.\nEm cảm ơn anh/chị!','Dạ em chào anh/chị {ten}. Em là kỹ thuật viên đã đến hỗ trợ Internet cho nhà mình ngày {ngay}[[ (SHĐ: {hd})]][[ về lỗi {loi}]]. Sự cố đã được khắc phục ạ.\nAnh/chị vui lòng dành 1 phút mở ứng dụng Hi FPT để đánh giá lần hỗ trợ này giúp em nhé. Nếu mạng còn chập chờn, anh/chị nhắn em để em xử lý ngay.\nEm cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa lắp đặt Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Mạng và Wi-Fi đã hoạt động ổn định, anh/chị dùng có gì chưa rõ cứ nhắn em nhé. Anh/chị vui lòng mở ứng dụng Hi FPT và dành 1 phút đánh giá buổi lắp đặt giúp em. Em cảm ơn anh/chị!','Chào anh/chị {ten}, em là kỹ thuật viên vừa xử lý sự cố Internet cho nhà mình (HĐ {hd}) ngày {ngay}. Lỗi đã được khắc phục, nếu mạng còn chập chờn anh/chị nhắn em để em hỗ trợ ngay. Anh/chị vui lòng mở ứng dụng Hi FPT và đánh giá giúp em lần bảo trì này nhé. Em cảm ơn anh/chị!'].map(x=>x.replace(/\\n/g,'\n'));
 (()=>{try{['tk','bt'].forEach(k=>{const v=localStorage.getItem('sokythuat.rateTpl.'+k);if(v&&RATE_OLD.includes(v))localStorage.removeItem('sokythuat.rateTpl.'+k);});}catch(e){}})();
 function rateTpl(t){t=t==='bao_tri'?'bao_tri':'trien_khai';try{return localStorage.getItem(tplKey(t))||RATE_TPL_DEF[t]}catch(e){return RATE_TPL_DEF[t]}}
-function rateMsg(j){const c=custOf(j);
-  const v={ten:c.name||'',hd:c.contract||'',ngay:fmtFull(doneAt(j)),loai:j.type==='bao_tri'?'bảo trì':'lắp đặt',loi:(j.issue||(j.bt&&j.bt.nguyennhan)||'').replace(/\s*\(.*?\)\s*/g,' ').trim().replace(/^(\S)(?![\w-]*[A-Z])/,ch=>ch.toLowerCase())};
+const XH={anh:{l:'Anh',self:'em',hint:'Nam, lớn hơn mình'},chi:{l:'Chị',self:'em',hint:'Nữ, lớn hơn mình'},chu:{l:'Chú',self:'cháu',hint:'Nam lớn tuổi'},co:{l:'Cô',self:'cháu',hint:'Nữ lớn tuổi'},bac:{l:'Bác',self:'cháu',hint:'Người cao tuổi'},
+  ban:{l:'Bạn',self:'mình',hint:'Bằng tuổi',casual:true},em:{l:'Em',self:'@',hint:'Nhỏ tuổi hơn',casual:true}};
+const ktvSelf=()=>profile().gender==='nu'?'chị':'anh';
+const xhOptions=v=>`<option value="">Chưa rõ (anh/chị)</option>${Object.entries(XH).map(([k,x])=>`<option value="${k}" ${k===v?'selected':''}>${x.l} – ${x.hint}</option>`).join('')}`;
+const givenName=n=>{const w=String(n||'').trim().split(/\s+/);return w[w.length-1]||'';};
+const cap=w=>w.charAt(0).toUpperCase()+w.slice(1);
+function applyXH(t,xh){const x=XH[xh];if(!x)return t;const self=x.self==='@'?ktvSelf():x.self;
+  t=t.replace(/(^|[\s,.!?(:;"'])(em|Em)(?=[\s,.!?):;"']|$)/g,(m,p,w)=>p+(w==='Em'?'\u0001S':'\u0001s'));
+  t=t.replace(/(anh|Anh)\s*\/\s*(chị|Chị)/g,m=>m[0]==='A'?'\u0001C':'\u0001c');
+  const cl=x.l.toLowerCase();
+  t=t.replace(/\u0001S/g,cap(self)).replace(/\u0001s/g,self).replace(/\u0001C/g,cap(cl)).replace(/\u0001c/g,cl);
+  if(x.casual){t=t.replace(/nhà mình/g,'nhà '+cl);t=t.replace(/^Dạ\s+(\S)/gm,(m,c)=>c.toUpperCase()).replace(/\s+ạ([.!])/g,' nhé$1').replace(/\s+ạ(\s|$)/g,'$1');}
+  return t;}
+function rateMsg(j,xhOverride){const c=custOf(j);const xh=xhOverride!==undefined?xhOverride:(c.xh||'');
+  const v={ten:(xh?givenName(c.name):c.name)||'',hd:c.contract||'',ngay:fmtFull(doneAt(j)),loai:j.type==='bao_tri'?'bảo trì':'lắp đặt',loi:(j.issue||(j.bt&&j.bt.nguyennhan)||'').replace(/\s*\(.*?\)\s*/g,' ').trim().replace(/^(\S)(?![\w-]*[A-Z])/,ch=>ch.toLowerCase())};
   let t=rateTpl(j.type).replace(/\[\[(.*?)\]\]/g,(_,inner)=>{const ks=[...inner.matchAll(/\{(\w+)\}/g)].map(x=>x[1]);return ks.some(k=>k in v&&!v[k])?'':inner;});
   if(!v.hd)t=t.replace(/\s*[(,]?\s*(?:SHĐ|HĐ|số hợp đồng)\s*:?\s*\{hd\}\)?/gi,'');
-  return t.replace(/\{(ten|hd|ngay|loai|loi)\}/g,(_,k)=>v[k]);}
+  return applyXH(t.replace(/\{(ten|hd|ngay|loai|loi)\}/g,(_,k)=>v[k]),xh);}
 const zaloPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.startsWith('84')&&d.length>=11)d='0'+d.slice(2);return d.length>=9?d:'';};
 const ZALO_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10h5l-5 4.5h5"/></svg>';
 const normHD=v=>String(v||'').toUpperCase().replace(/[\s.\-_]/g,'');
+function custByPhone(v,exceptId){const k=zaloPhone(v);if(k.length<9)return null;return Object.values(Store.customers).find(c=>c.id!==exceptId&&zaloPhone(c.phone)===k)||null;}
 function custByContract(v,exceptId){const k=normHD(v);if(k.length<4)return null;return Object.values(Store.customers).find(c=>c.id!==exceptId&&normHD(c.contract)===k)||null;}
 function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j);const r=rateOf(j);const ph=zaloPhone(c.phone);
   openSheet('Xin đánh giá Hi FPT',`<div class="infobox">
@@ -1060,48 +1097,93 @@ function openRateSheet(id){const j=Store.jobs[id];if(!j)return;const c=custOf(j)
       <div class="kv"><span>Điện thoại</span><span class="mono">${esc(c.phone||'—')}</span></div>
       <div class="kv"><span>Trạng thái</span><span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span></div></div>
     ${c.contract?'':'<div class="notice">Khách chưa có số hợp đồng nên lời nhắn bỏ phần SHĐ. Bấm “Sửa thông tin khách” để thêm.</div>'}
+    <div class="f" style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)">Xưng hô với khách${xhSeg('rmXh',c.xh||'')}</div>
     <label class="f">Lời nhắn (đã điền tên, SHĐ, ngày; sửa riêng cho ca này nếu cần)<textarea id="rmText" style="min-height:190px">${esc(rateMsg(j))}</textarea></label>`,
     root=>{const txt=()=>$('#rmText',root).value.trim();
+      bindXhSeg(root,'rmXh',c.id,xh=>{$('#rmText',root).value=rateMsg(Store.jobs[id],xh);});
       $('#rmCopy',root).addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');});
-      $('#rmZalo',root)?.addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');});
+      $('#rmZalo',root)?.addEventListener('click',()=>{copyText(txt(),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');setRate(id,{sentAt:new Date().toISOString()});});
       $('#rmSms',root)?.addEventListener('pointerdown',()=>{$('#rmSms',root).href=`sms:${ph}?body=${encodeURIComponent(txt())}`;});
       $('#rmCust',root).addEventListener('click',()=>openCustomer(c.id));
+      $('#rmShare',root)?.addEventListener('click',()=>shareToZalo(txt(),id));
     },`<button class="btn sm" type="button" id="rmCust">Sửa thông tin khách</button><div class="row">
 
       ${ph&&!isEmbedded?`<a class="btn" id="rmSms" href="sms:${ph}">Gửi SMS</a>`:''}
+      ${canShareText()?'<button class="btn" type="button" id="rmShare">Chia sẻ (điền sẵn)</button>':''}
       ${ph?`<button class="btn" type="button" id="rmCopy">Chép lời nhắn</button><a class="btn pri" id="rmZalo" href="https://zalo.me/${ph}" target="_blank" rel="noopener">${ZALO_ICON}Gửi qua Zalo</a>`:'<button class="btn pri" type="button" id="rmCopy">Chép lời nhắn</button>'}</div>`);
-  const sf=$('.sheet-f');if(sf){const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent=r.st==='danhgia'?'Chuyển về chưa đánh giá':'✓ Đã đánh giá';
-    b.addEventListener('click',()=>{setRate(id,{st:r.st==='danhgia'?'chua':'danhgia'});closeSheet();toast(r.st==='danhgia'?'Chưa đánh giá':'Đã đánh giá, chạm sao để ghi số sao');});sf.firstElementChild.after(b);}}
+  const sf=$('.sheet-f');if(sf){const w=document.createElement('div');w.className='seg';w.innerHTML=['chua','daxin'].map(k=>`<button type="button" data-val="${k}" aria-pressed="${k===r.st}">${RATE_ST[k].l}</button>`).join('');
+    w.addEventListener('click',e=>{const b=e.target.closest('[data-val]');if(!b)return;$$('button',w).forEach(x=>x.setAttribute('aria-pressed',x===b));setRate(id,{req:b.dataset.val});toast(RATE_ST[b.dataset.val].l);});sf.firstElementChild.after(w);}}
+function xhSeg(id,v){return `<div class="seg" id="${id}">${[['','?'],...Object.entries(XH).map(([k,x])=>[k,x.l])].map(([k,l])=>`<button type="button" data-val="${k}" aria-pressed="${k===v}" title="${k?XH[k].hint:'Chưa rõ: anh/chị'}">${l}</button>`).join('')}</div>`;}
+function bindXhSeg(root,id,cid,onChange){bindSeg(root,id,v=>{const c=Store.customers[cid];if(c&&(c.xh||'')!==v){const c2=JSON.parse(JSON.stringify(c));c2.xh=v;Store.put('customers',c2);}onChange&&onChange(v);});}
+/* ----- Gửi lần lượt qua Zalo ----- */
+let RQ=null;
+function rateBase(){const lim=Date.now()-30*86400000;
+  if(rateView==='ngay')return jobsArr().filter(j=>dayKey(doneAt(j))===rateDay);
+  return jobsArr().filter(j=>isDue(j)&&new Date(doneAt(j)).getTime()>=lim);}
+function queueList(){return rateBase().filter(j=>rateOf(j).st==='chua'&&isDue(j)&&zaloPhone(custOf(j).phone)).reverse();}
+function startQueue(){const list=queueList();if(!list.length){toast('Không có ca nào đủ 48h cần xin');return;}
+  RQ={ids:list.map(j=>j.id),i:0,sent:0,skip:0,waiting:false};showQueue();}
+function showQueue(){
+  if(!RQ)return;
+  if(RQ.i>=RQ.ids.length){const r=RQ;RQ=null;openSheet('Gửi lần lượt',`<div class="empty" style="border-style:solid"><b style="font-size:18px">Đã xong ${r.ids.length} khách</b><span>Đã mở Zalo ${r.sent} khách · bỏ qua ${r.skip} khách.</span><span class="hint">Các ca đã gửi đã chuyển sang “Đã xin”.</span></div>`,null,'<span></span><button class="btn pri" type="button" data-close>Xong</button>');renderAll();return;}
+  const id=RQ.ids[RQ.i];const j=Store.jobs[id];if(!j){RQ.i++;return showQueue();}
+  const c=custOf(j);const ph=zaloPhone(c.phone);const n=RQ.ids.length;
+  openSheet(`Gửi lần lượt · ${RQ.i+1}/${n}`,`<div class="qprog"><span style="width:${RQ.i/n*100}%"></span></div>
+    <div class="infobox"><div class="kv"><span>Khách hàng</span><b>${esc(c.name)}</b></div>
+      <div class="kv"><span>SHĐ · loại ca</span><span><span class="mono">${esc(c.contract||'—')}</span> · ${esc(typeLabel(j.type))} ${esc(fmtFull(doneAt(j)).slice(0,5))}</span></div>
+      <div class="kv"><span>Zalo</span><span class="mono">${esc(ph)}</span></div></div>
+    <div class="f" style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)">Xưng hô với khách${xhSeg('qXh',c.xh||'')}</div>
+    <label class="f">Lời nhắn<textarea id="qText" style="min-height:170px">${esc(rateMsg(j))}</textarea></label>
+    <div class="hint" id="qHint">Bấm <b>Mở Zalo & gửi</b> → trong Zalo chạm ô chat, chọn <b>Dán</b> (bàn phím thường hiện sẵn nút dán đoạn vừa chép) → gửi → quay lại app là tự sang khách tiếp theo.</div>`,
+  root=>{
+    bindXhSeg(root,'qXh',c.id,xh=>{$('#qText',root).value=rateMsg(Store.jobs[id],xh);});
+    $('#scrim').addEventListener('click',e=>{if(e.target.id==='scrim'||e.target.closest('[data-close]'))RQ=null;},true);
+    $('#qGo',root).addEventListener('click',()=>{copyText($('#qText',root).value.trim(),'Đã chép lời nhắn, dán vào Zalo rồi gửi');setRate(id,{sentAt:new Date().toISOString()});
+      if(RQ){RQ.sent++;RQ.waiting=true;}const nx=$('#qNext',root);nx.classList.add('pri');nx.textContent=RQ&&RQ.i+1<n?'Tiếp ›':'Hoàn tất';$('#qHint',root).innerHTML='Đã mở Zalo. Gửi xong quay lại app sẽ tự chuyển khách tiếp theo, hoặc bấm <b>Tiếp</b>.';});
+    $('#qShare',root)?.addEventListener('click',async()=>{if(await shareToZalo($('#qText',root).value.trim(),id)){if(RQ){RQ.sent++;RQ.waiting=false;RQ.i++;}showQueue();}});
+    $('#qSkip',root).addEventListener('click',()=>{if(!RQ)return;RQ.skip++;RQ.i++;RQ.waiting=false;showQueue();});
+    $('#qNext',root).addEventListener('click',()=>{if(!RQ)return;RQ.i++;RQ.waiting=false;showQueue();});
+  },`<button class="btn sm" type="button" data-close>Dừng</button><div class="row"><button class="btn" type="button" id="qSkip">Bỏ qua</button><button class="btn" type="button" id="qNext">Tiếp ›</button>
+     <a class="btn pri" id="qGo" href="https://zalo.me/${ph}" target="_blank" rel="noopener">${ZALO_ICON}Mở Zalo & gửi</a></div>
+     ${canShareText()?'<div style="flex-basis:100%"><button class="btn sm" type="button" id="qShare" style="width:100%">Chia sẻ vào Zalo (điền sẵn chữ, tự chọn người nhận)</button></div>':''}`);}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&RQ&&RQ.waiting){RQ.waiting=false;RQ.i++;setTimeout(()=>{showQueue();if(RQ)toast('Khách tiếp theo: '+custOf(Store.jobs[RQ.ids[RQ.i]]||{}).name);},250);}});
+const canShareText=()=>!isEmbedded&&!!navigator.share;
+async function shareToZalo(text,id){try{await navigator.share({text});if(id)setRate(id,{sentAt:new Date().toISOString()});return true;}catch(e){if(e&&e.name!=='AbortError')toast('Máy không chia sẻ được, hãy dùng Mở Zalo rồi Dán');return false;}}
 function starsHTML(n,jid){return `<span class="stars" ${jid?`data-stars="${esc(jid)}"`:''}>${[1,2,3,4,5].map(i=>`<button type="button" class="star${i<=n?' on':''}" data-star="${i}" aria-label="${i} sao">★</button>`).join('')}</span>`;}
-function setRate(id,patch){const j=JSON.parse(JSON.stringify(Store.jobs[id]));if(!j)return;const r=Object.assign(rateOf(j),patch);
-if(patch.st==='danhgia'&&!r.ratedAt)r.ratedAt=new Date().toISOString();if(patch.st&&patch.st!=='danhgia')r.stars=0;
+function setRate(id,patch){const j=JSON.parse(JSON.stringify(Store.jobs[id]));if(!j)return;const r=Object.assign({},j.rate||{});
+  if(patch.sentAt){r.sentAt=patch.sentAt;r.req='daxin';}if(patch.req){r.req=patch.req;if(patch.req==='chua')delete r.sentAt;}
   j.rate=r;Store.put('jobs',j);renderAll();}
-let rateMonth=todayKey().slice(0,7),rateFilter='chua';
+let rateView='de-xuat',rateDay=todayKey(),rateFilter='chua';let rateMonth=todayKey().slice(0,7);
+function dueLabel(j){if(isDue(j))return '<span class="pill p-ok">Đủ 48h</span>';const ms=dueAt(j).getTime()-Date.now();const h=Math.ceil(ms/3600000);
+  return `<span class="pill s-cho" title="Đến hạn ${esc(fmtFull(dueAt(j)).slice(0,5))} ${fmtTime(dueAt(j))}">Còn ${h} giờ</span>`;}
 function renderRates(){
-  const [Y,M]=rateMonth.split('-').map(Number);$('#rateMonth').textContent='Tháng '+M+'/'+Y;
+  $$('#rateView button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.rv===rateView));
+  $('#rateDayNav').hidden=rateView!=='ngay';const di=$('#rateDay');if(document.activeElement!==di)di.value=rateDay;
   $$('#rateTplBox textarea').forEach(t=>{if(document.activeElement!==t)t.value=rateTpl(t.dataset.tk);});
-  const all=jobsArr().filter(j=>dayKey(doneAt(j)).slice(0,7)===rateMonth);
-  const cnt=k=>all.filter(j=>rateOf(j).st===k).length;const rated=all.filter(j=>rateOf(j).st==='danhgia');
-  const withStars=rated.filter(j=>rateOf(j).stars>0);const avg=withStars.length?withStars.reduce((a,j)=>a+rateOf(j).stars,0)/withStars.length:0;
-  const low=withStars.filter(j=>rateOf(j).stars<=3).length;
-  $('#rateKpis').innerHTML=`<div class="kpi"><span class="tag">Ca trong tháng</span><span class="n">${all.length}</span><span class="hint">TK ${all.filter(j=>j.type==='trien_khai').length} · BT ${all.filter(j=>j.type==='bao_tri').length}</span></div>
-    <div class="kpi" style="--tc:var(--warn)"><span class="tag" style="color:var(--warn)">Chưa đánh giá</span><span class="n">${cnt('chua')}</span><span class="hint">${all.length?Math.round(cnt('chua')/all.length*100):0}% số ca</span></div>
-    <div class="kpi" style="--tc:var(--ok)"><span class="tag" style="color:var(--ok)">Đã đánh giá</span><span class="n">${rated.length}</span><span class="hint">${all.length?Math.round(rated.length/all.length*100):0}% số ca</span></div>
-    <div class="kpi" style="--tc:var(--fiber)"><span class="tag">Điểm trung bình</span><span class="n">${withStars.length?avg.toFixed(1):'–'}<small> ★</small></span><span class="hint">${low?low+' đánh giá ≤ 3★':'không có đánh giá thấp'}</span></div>`;
-  $('#rateChips').innerHTML=[['chua','Chưa đánh giá'],['danhgia','Đã đánh giá'],['','Tất cả']].map(([k,l])=>`<button class="chip" type="button" data-rf="${k}" aria-pressed="${rateFilter===k}">${l} · ${k?cnt(k):all.length}</button>`).join('');
+  const all=rateBase();const cnt=k=>all.filter(j=>rateOf(j).st===k).length;
+  const sugg=jobsArr().filter(j=>isDue(j)&&rateOf(j).st==='chua'&&new Date(doneAt(j)).getTime()>=Date.now()-30*86400000).length;
+  const waitN=all.filter(j=>!isDue(j)&&rateOf(j).st==='chua').length;
+  $('#rateKpis').innerHTML=`<div class="kpi" style="--tc:var(--accent)"><span class="tag" style="color:var(--accent)">Đề xuất xin</span><span class="n">${sugg}</span><span class="hint">ca đủ 48h, chưa xin (30 ngày)</span></div>
+    <div class="kpi"><span class="tag">${rateView==='ngay'?'Ca ngày '+esc(fmtFull(rateDay+'T12:00:00').slice(0,5)):'Ca đủ 48h'}</span><span class="n">${all.length}</span><span class="hint">TK ${all.filter(j=>j.type==='trien_khai').length} · BT ${all.filter(j=>j.type==='bao_tri').length}${waitN?' · '+waitN+' chưa đủ 48h':''}</span></div>
+    <div class="kpi" style="--tc:var(--warn)"><span class="tag" style="color:var(--warn)">Chưa xin</span><span class="n">${cnt('chua')}</span><span class="hint">${all.length?Math.round(cnt('chua')/all.length*100):0}% số ca</span></div>
+    <div class="kpi" style="--tc:var(--ok)"><span class="tag" style="color:var(--ok)">Đã xin</span><span class="n">${cnt('daxin')}</span><span class="hint">${all.length?Math.round(cnt('daxin')/all.length*100):0}% số ca</span></div>`;
+  {const qn=queueList().length;
+   $('#rateQueue').innerHTML=`<div class="qbar"><div><b>Gửi lần lượt qua Zalo</b><div class="hint">Gửi cho các ca <b>đủ 48 giờ</b> sau khi hoàn thành mà <b>chưa xin</b>${rateView==='ngay'?' của ngày đang xem':''}. Gửi xong ca tự chuyển sang Đã xin.</div></div>
+     <button class="btn pri" type="button" data-q="go" ${qn?'':'disabled'}>${ZALO_ICON}Gửi lần lượt · ${qn}</button></div>`;}
+  $('#rateChips').innerHTML=[['chua','Chưa xin'],['daxin','Đã xin'],['','Tất cả']].map(([k,l])=>`<button class="chip" type="button" data-rf="${k}" aria-pressed="${rateFilter===k}">${l} · ${k?cnt(k):all.length}</button>`).join('');
   const q=$('#rateSearch').value.trim().toLowerCase();const qn=q.replace(/\D/g,'');
-  const list=all.filter(j=>{if(rateFilter&&rateOf(j).st!==rateFilter)return false;if(!q)return true;const c=custOf(j);return c.name.toLowerCase().includes(q)||(c.contract||'').toLowerCase().includes(q)||(qn&&(c.phone||'').replace(/\D/g,'').includes(qn));});
-  if(!list.length){$('#rateList').innerHTML=`<div class="empty">${all.length?(rateFilter==='chua'?'Tất cả các ca trong tháng đã được đánh giá.':'Chưa có ca nào được đánh giá.'):'Tháng này chưa có ca nào. Ca được ghi ở tab Lịch ngày.'}</div>`;return;}
-  $('#rateList').innerHTML=list.map(j=>{const c=custOf(j);const r=rateOf(j);const d=doneAt(j);
+  const list=all.filter(j=>{if(rateFilter&&rateOf(j).st!==rateFilter)return false;if(!q)return true;const c=custOf(j);return c.name.toLowerCase().includes(q)||(c.contract||'').toLowerCase().includes(q)||(qn&&(c.phone||'').replace(/\D/g,'').includes(qn));})
+    .sort((a,b)=>String(doneAt(a)).localeCompare(String(doneAt(b))));
+  if(!list.length){$('#rateList').innerHTML=`<div class="empty">${rateView==='de-xuat'?(rateFilter==='chua'?'Không còn ca nào đủ 48h cần xin đánh giá.':'Không có ca nào ở mục này.'):(all.length?'Không có ca nào ở mục này.':'Ngày này không có ca nào.')}</div>`;return;}
+  $('#rateList').innerHTML=list.map(j=>{const c=custOf(j);const r=rateOf(j);const d=doneAt(j);const due=isDue(j);
     return `<div class="rcard c-${esc(j.type)}" data-ropen="${esc(j.id)}"><span class="stripe"></span><div class="rc-main">
-      <div class="job-top"><span class="tag">${esc(typeLabel(j.type))} · ${esc(fmtFull(d))}</span><span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span></div>
+      <div class="job-top"><span class="tag">${esc(typeLabel(j.type))} · ${esc(fmtFull(d))} ${fmtTime(d)}</span><span class="row" style="gap:4px">${r.st==='chua'?dueLabel(j):''}<span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span></span></div>
       <div class="job-name">${esc(c.name)} ${flagPill(c)}</div>
-      <div class="job-sub">${[c.contract?'HĐ '+esc(c.contract):'',c.phone?'<span class="mono">'+esc(c.phone)+'</span>':''].filter(Boolean).join(' · ')}</div>
-      ${r.st==='danhgia'?`<div class="row" style="gap:8px">${starsHTML(r.stars,j.id)}<span class="hint">${r.stars?'':'Chạm để chọn số sao KH chấm'}</span></div>`:''}
+      <div class="job-sub">${[c.contract?'HĐ '+esc(c.contract):'',c.phone?'<span class="mono">'+esc(c.phone)+'</span>':'',r.sentAt&&r.st==='daxin'?'xin lúc '+esc(fmtFull(r.sentAt).slice(0,5))+' '+fmtTime(r.sentAt):''].filter(Boolean).join(' · ')}</div>
       <div class="row" style="gap:6px">
-        ${zaloPhone(c.phone)?`<a class="btn sm${r.st==='chua'?' pri':''}" href="https://zalo.me/${zaloPhone(c.phone)}" target="_blank" rel="noopener" data-rzalo="${esc(j.id)}">${ZALO_ICON}Gửi Zalo</a><button class="btn sm" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button>`
-          :`<button class="btn sm${r.st==='chua'?' pri':''}" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button><button class="btn sm" type="button" data-cust="${esc(c.id)}">+ Thêm SĐT</button>`}
-        ${r.st==='chua'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="danhgia">✓ Đã đánh giá</button>`:`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="chua">Chuyển về chưa đánh giá</button>`}
+        ${zaloPhone(c.phone)?`<a class="btn sm${r.st==='chua'&&due?' pri':''}" href="https://zalo.me/${zaloPhone(c.phone)}" target="_blank" rel="noopener" data-rzalo="${esc(j.id)}">${ZALO_ICON}Gửi Zalo</a><button class="btn sm" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button>`
+          :`<button class="btn sm" type="button" data-rmsg="${esc(j.id)}">Chép lời nhắn</button><button class="btn sm" type="button" data-cust="${esc(c.id)}">+ Thêm SĐT</button>`}
+        ${r.st==='chua'?`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="daxin">✓ Đã xin</button>`:`<button class="btn sm" type="button" data-rset="${esc(j.id)}" data-v="chua">Chuyển về chưa xin</button>`}
       </div></div></div>`;}).join('');
 }
 
@@ -1164,6 +1246,7 @@ function openJob(id,preset){
       <div id="newCustBox" class="grid2">
         <label class="f">Họ tên<input id="nName" autocomplete="off"></label>
         <label class="f">Số hợp đồng<input id="nContract" autocomplete="off" placeholder="VD: SGH123456"></label>
+        <label class="f">Xưng hô (giới tính)<select id="nXh">${xhOptions('')}</select></label>
         <label class="f">Số điện thoại<input id="nPhone" type="tel" autocomplete="off"></label>
         <label class="f">Địa chỉ<input id="nAddr" autocomplete="off"></label>
       </div>
@@ -1189,7 +1272,7 @@ function openJob(id,preset){
     </fieldset>
     <fieldset id="btBox"><legend>Note bảo trì (BT)</legend>
       <div class="grid2">
-        <label class="f">1. Số CLs trong 6 tháng gần nhất<input id="bt1" type="number" min="0" inputmode="numeric" value="${esc(bt.cls)}"></label>
+        <label class="f">1. Số CLs trong 6 tháng gần nhất<input id="bt1" type="number" min="0" inputmode="numeric" value="${esc(bt.cls)}"><span class="hint" id="bt1Hint">Tự tính từ dữ liệu đã lưu: số ca bảo trì của khách trong 6 tháng tính đến ngày làm, kể cả ca này.</span></label>
         <label class="f">2. Liên hệ KH<input id="bt2" value="${esc(bt.lienhe)}" placeholder="SĐT / đã liên hệ lúc…"></label>
         <label class="f">Tên KH<input id="bt2b" value="${esc(bt.tenkh)}"></label>
         <label class="f">3. Mô hình nhà<input id="bt3" value="${esc(bt.nha)}" placeholder="VD: Nhà ống 4×16 m, 3 tầng"></label>
@@ -1233,7 +1316,7 @@ function openJob(id,preset){
     bindSeg(root,'fType',v=>{type=v;drawType();});
     drawType();
     const sel=$('#fCust',root);
-    if(!j.customerId&&!custs.length) sel.value='__new'; else if(!j.customerId) sel.value=custs[0]?custs[0].id:'__new';
+    if(!j.customerId) sel.value='__new';
     {const NEW='<option value="__new">+ Khách hàng mới…</option>';
       const opts=custs.map(c=>({id:c.id,label:c.name+(c.contract?' · '+c.contract:''),hd:(c.contract||'').toLowerCase().replace(/\s/g,''),key:((c.contract||'')+' '+c.name).toLowerCase(),ph:(c.phone||'').replace(/\D/g,'')}));
       $('#fCustQ',root).addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();const qd=q.replace(/\s/g,'');const qn=q.replace(/\D/g,'');const h=$('#fCustQHint',root);const cur=sel.value;
@@ -1244,10 +1327,24 @@ function openJob(id,preset){
         h.className=q&&!list.length?'hint bad':'hint';h.textContent=q?(list.length?`Tìm thấy ${list.length} khách${list.length>1?', đã chọn khách khớp nhất':''}.`:'Chưa có khách này. Nhập thông tin để tạo khách mới.'):'';
         if(sel.value!==cur||q)sel.dispatchEvent(new Event('change'));});
       if(!ex&&!preset?.customerId)setTimeout(()=>$('#fCustQ',root).focus(),60);}
-    $('#nContract',root).addEventListener('input',e=>{const c=custByContract(e.target.value);if(!c)return;
-      if(![...sel.options].some(o=>o.value===c.id)){const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.contract?' · '+c.contract:'');sel.appendChild(o);}
-      sel.value=c.id;sel.dispatchEvent(new Event('change'));['nName','nContract','nPhone','nAddr'].forEach(id=>{const el=$('#'+id,root);if(el)el.value='';});
-      const h=$('#fCustQHint',root);h.className='hint ok';h.textContent=`SHĐ ${c.contract} đã có: ${c.name}. Đã điền thông tin khách có sẵn.`;toast('Khách đã có, đã điền thông tin sẵn');});
+    let matchedId=null;
+    const prefillFrom=c0=>{const e=id=>$('#'+id,root);const fillE=(id,v)=>{const el=e(id);if(el&&!el.value&&v!=null&&v!=='')el.value=v;};
+      fillE('bt2b',c0.name);fillE('bt2',c0.phone);fillE('tk1b',c0.name);fillE('tk1',c0.phone);
+      const hd=houseDesc(c0.id);fillE('bt3',hd.nha);fillE('bt4',hd.thietbi);if(hd.dientich){fillE('tk3a',hd.dientich);fillE('tk3b',hd.sotang);}
+      try{if(!coordTouched&&hasCoord(c0)){jLat.value=c0.lat;jLng.value=c0.lng;coordLinks();}}catch(err){}};
+    const tryMatch=src=>{const hdEl=$('#nContract',root),phEl=$('#nPhone',root);const h=$('#fCustQHint',root);
+      const c=custByContract(hdEl.value)||custByPhone(phEl.value);
+      if(!c){if(matchedId){matchedId=null;h.className='hint';h.textContent='';}return;}
+      if(matchedId===c.id)return;matchedId=c.id;
+      const put=(el,v)=>{if(el&&el!==src&&v!=null&&v!=='')el.value=v;};
+      put($('#nName',root),c.name);put(hdEl,c.contract);put(phEl,c.phone);put($('#nAddr',root),c.address);$('#nXh',root).value=c.xh||'';
+      prefillFrom(c);
+      h.className='hint ok';h.textContent=`Khách đã có: ${c.name}${c.contract?' · SHĐ '+c.contract:''}${c.phone?' · '+c.phone:''}. Đã tự điền thông tin, ca sẽ ghi vào khách này.`;
+      toast('Khách đã có, đã tự điền thông tin');updCls();};
+    function updCls(){const el=$('#bt1',root);if(!el||el.dataset.manual==='1')return;let cid=null;try{cid=matchedId||null}catch(err){}if(!cid&&sel.value!=='__new')cid=sel.value;
+      const w=$('#fDoneAt',root).value;const at=w?new Date(w).toISOString():new Date().toISOString();el.value=String(clsCount(cid,at,j.id)+1);}
+    $('#nContract',root).addEventListener('input',e=>tryMatch(e.target));
+    $('#nPhone',root).addEventListener('input',e=>tryMatch(e.target));
     const showCust=()=>{const isNew=sel.value==='__new';$('#newCustBox',root).hidden=!isNew;const c=Store.customers[sel.value];
       $('#custInfo',root).innerHTML=c?`<div class="infobox">${c.flag&&FLAG_LV[c.flag.level]?`<div class="flagwarn ${c.flag.level}">${flagPill(c)} ${esc((c.flag.reasons||[]).join(', '))}${c.flag.note?' · '+esc(c.flag.note):''}</div>`:''}
         <div class="kv"><span>Điện thoại</span><span class="row"><span class="mono">${esc(c.phone||'—')}</span>${c.phone?`<button class="btn sm" type="button" data-copy="${esc(c.phone)}">Chép</button>`:''}</span></div>
@@ -1256,7 +1353,7 @@ function openJob(id,preset){
       $('#goCust',root)?.addEventListener('click',()=>{if(save(true))openCustomer(c.id)});
       $('#goCov',root)?.addEventListener('click',()=>{if(save(true)){closeSheet();cov.pendingKey=c.id;location.hash='vung-phu';if(view==='vung-phu')renderCovShell(true);}});};
     const btSeg={};[['bt9','cantb'],['bt10','dongy'],['bt11','apse']].forEach(([id,k])=>{btSeg[k]=bindSeg(root,id);});
-    const btGet=()=>({cls:$('#bt1',root).value,lienhe:$('#bt2',root).value.trim(),tenkh:$('#bt2b',root).value.trim(),nha:$('#bt3',root).value.trim(),thietbi:$('#bt4',root).value.trim(),
+    const btGet=()=>({clsManual:$('#bt1',root).dataset.manual==='1',cls:$('#bt1',root).value,lienhe:$('#bt2',root).value.trim(),tenkh:$('#bt2b',root).value.trim(),nha:$('#bt3',root).value.trim(),thietbi:$('#bt4',root).value.trim(),
       tongtb:$('#bt5',root).value,nguyennhan:$('#bt6',root).value.trim(),xuly:$('#bt7',root).value.trim(),tool:$('#bt8',root).value.trim(),cantb:btSeg.cantb()||'',dongy:btSeg.dongy()||'',apse:btSeg.apse()||''});
     const tkSeg={};[['tk8','tool'],['tk9','cantb'],['tk10','dongy']].forEach(([id,k])=>{tkSeg[k]=bindSeg(root,id);});
     const tkGet=()=>({lienhe:$('#tk1',root).value.trim(),tenkh:$('#tk1b',root).value.trim(),kiemtra:$('#tk2',root).value.trim(),dientich:$('#tk3a',root).value,sotang:$('#tk3b',root).value,
@@ -1267,9 +1364,11 @@ function openJob(id,preset){
       const hd=houseDesc(c0.id);if(!$('#tk3a',root).value&&hd.dientich){$('#tk3a',root).value=hd.dientich;$('#tk3b',root).value=hd.sotang;}});
     $('#btCopy',root).addEventListener('click',()=>copyText(btText(btGet()),'Đã chép note BT'));
     sel.addEventListener('change',()=>{const c0=Store.customers[sel.value];if(!c0)return;
-      if(!$('#bt2b',root).value)$('#bt2b',root).value=c0.name;if(!$('#bt1',root).value)$('#bt1',root).value=btCount6m(c0.id);if(!$('#bt2',root).value)$('#bt2',root).value=c0.phone||'';
+      if(!$('#bt2b',root).value)$('#bt2b',root).value=c0.name;if(!$('#bt2',root).value)$('#bt2',root).value=c0.phone||'';
       const hd=houseDesc(c0.id);if(!$('#bt3',root).value&&hd.nha)$('#bt3',root).value=hd.nha;if(!$('#bt4',root).value&&hd.thietbi)$('#bt4',root).value=hd.thietbi;});
     sel.addEventListener('change',showCust);showCust();
+    {const b1=$('#bt1',root);if(b1){if(j.bt&&j.bt.clsManual)b1.dataset.manual='1';b1.addEventListener('input',()=>{b1.dataset.manual='1';$('#bt1Hint',root).textContent='Đã sửa tay. Xóa trống ô để app tự tính lại.';});b1.addEventListener('change',()=>{if(!b1.value){b1.dataset.manual='';updCls();$('#bt1Hint',root).textContent='Tự tính từ dữ liệu đã lưu: số ca bảo trì của khách trong 6 tháng tính đến ngày làm, kể cả ca này.';}});}
+     sel.addEventListener('change',()=>updCls());$('#fDoneAt',root).addEventListener('change',()=>updCls());updCls();}
     let phIds=(j.photos||[]).slice();
     const phRender=async()=>{const box=$('#phBox',root);const out=[];for(const id of phIds){try{const p=await PH.get(id);if(p)out.push(`<span class="thumbw"><button type="button" class="thumb" data-photo="${esc(id)}"><img src="${p.data}" alt="Ảnh kỹ thuật"></button><button type="button" class="thumbx" data-phdel="${esc(id)}" aria-label="Xóa ảnh">×</button></span>`);}catch(e){}}
       box.innerHTML=out.join('');$('#phCount',root).textContent=phIds.length?'· '+phIds.length:'';};
@@ -1299,8 +1398,11 @@ function openJob(id,preset){
     const rx=$('#fRx',root);const rxU=()=>{const r=rxEval(rx.value);$('#rxHint',root).innerHTML=r?`<span class="pill ${r.cls}">${r.t}</span>`:'Ngưỡng GPON: −8 đến −27 dBm'};rx.addEventListener('input',rxU);rxU();
     function save(silent){
       let cid=sel.value;
+      if(cid==='__new'&&matchedId&&Store.customers[matchedId]){const c=JSON.parse(JSON.stringify(Store.customers[matchedId]));
+        const v=id=>$('#'+id,root).value.trim();if(v('nName'))c.name=v('nName');if(v('nContract'))c.contract=v('nContract');if(v('nPhone')&&zaloPhone(v('nPhone'))!==zaloPhone(c.phone))c.phone=v('nPhone');if(v('nAddr'))c.address=v('nAddr');c.xh=$('#nXh',root).value;
+        Store.put('customers',c);cid=c.id;}
       if(cid==='__new'){const name=$('#nName',root).value.trim();if(!name){toast('Nhập tên khách hàng mới');$('#nName',root).focus();return false;}
-        const c={id:newId(),name,contract:$('#nContract',root).value.trim(),phone:$('#nPhone',root).value.trim(),address:$('#nAddr',root).value.trim(),lat:null,lng:null,box:'',boxLat:null,boxLng:null,note:''};
+        const c={id:newId(),name,xh:$('#nXh',root).value,contract:$('#nContract',root).value.trim(),phone:$('#nPhone',root).value.trim(),address:$('#nAddr',root).value.trim(),lat:null,lng:null,box:'',boxLat:null,boxLng:null,note:''};
         Store.put('customers',c);cid=c.id;}
       const when=$('#fDoneAt',root).value;const at=when?new Date(when).toISOString():new Date().toISOString();
       Object.assign(j,{type,customerId:cid,completedAt:at,scheduled:at,status:'xong',issue:type==='bao_tri'?$('#fIssue',root).value:'',
@@ -1357,6 +1459,7 @@ function openCustomer(id){
     <fieldset><legend>Thông tin khách</legend><div class="grid2">
       <label class="f">Họ tên<input id="cName" value="${esc(c.name)}" autocomplete="off"></label>
       <label class="f">Số hợp đồng<input id="cContract" value="${esc(c.contract)}" autocomplete="off"><span class="hint bad" id="cDupHint"></span></label>
+      <label class="f">Xưng hô (giới tính)<select id="cXh">${xhOptions(c.xh||'')}</select></label>
       <label class="f">Số điện thoại<input id="cPhone" type="tel" value="${esc(c.phone)}" autocomplete="off"></label>
       <label class="f">Địa chỉ<input id="cAddr" value="${esc(c.address)}" autocomplete="off"></label></div></fieldset>
     <fieldset><legend>Tọa độ nhà khách</legend>
@@ -1403,7 +1506,7 @@ function openCustomer(id){
       const la=parseFloat(lat.value),lo=parseFloat(lng.value);const ok=isFinite(la)&&isFinite(lo);
       const changed=ok&&(la!==+c.lat||lo!==+c.lng);
       const b=boxP();
-      Object.assign(c,{name,contract:$('#cContract',root).value.trim(),phone:$('#cPhone',root).value.trim(),address:$('#cAddr',root).value.trim(),
+      Object.assign(c,{name,xh:$('#cXh',root).value,contract:$('#cContract',root).value.trim(),phone:$('#cPhone',root).value.trim(),address:$('#cAddr',root).value.trim(),
         lat:ok?la:null,lng:ok?lo:null,box:$('#cBox',root).value.trim(),boxLat:b?b.lat:null,boxLng:b?b.lng:null,note:$('#cNote',root).value.trim()});
       if(changed){const now=new Date().toISOString();c.coordAt=now;
         const h=Array.isArray(c.coordHist)?c.coordHist.slice():[];if(!h.length&&ex&&hasCoord(ex)&&ex.coordAt)h.push({at:ex.coordAt,lat:ex.lat,lng:ex.lng,src:'paste'});
@@ -1465,7 +1568,7 @@ function caseInfoHTML(j){
       <button class="btn sm pri" type="button" data-job="${esc(j.id)}">Sửa ca</button></div>
     
     <div class="infobox">
-      <div class="kv"><span>Đánh giá Hi FPT</span><span>${(()=>{const r=rateOf(j);return `<span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span>${r.st==='danhgia'&&r.stars?' <span style="color:var(--fiber);letter-spacing:1px">'+'★'.repeat(r.stars)+'</span>':''}`;})()}</span></div>
+      <div class="kv"><span>Xin đánh giá Hi FPT</span><span>${(()=>{const r=rateOf(j);return `<span class="pill ${RATE_ST[r.st].c}">${RATE_ST[r.st].l}</span>`;})()}</span></div>
       ${j.issue?`<div class="kv"><span>Lỗi khách báo</span><span>${esc(j.issue)}</span></div>`:''}
       <div class="kv"><span>Tọa độ</span><span>${hasCoord(j)?`<a href="${mapUrl(j.lat,j.lng)}" target="_blank" rel="noopener" class="mono" style="color:var(--accent)">${(+j.lat).toFixed(6)}, ${(+j.lng).toFixed(6)}</a>${j.coordSrc==='gps'&&j.coordAcc?` <span class="hint">GPS ±${j.coordAcc} m</span>`:''}`:'—'}</span></div>
     </div>
@@ -1869,17 +1972,19 @@ document.addEventListener('click',e=>{if(e.target.closest('[data-open-data]'))op
 if(!isEmbedded&&navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{});}
 $('#btnNewCust').addEventListener('click',()=>openCustomer(null));
 $('#rateSearch').addEventListener('input',renderRates);
+$('#rateDay').addEventListener('change',e=>{if(e.target.value){rateDay=e.target.value;renderRates();}});
 $('#rateTplBox').addEventListener('change',e=>{const t=e.target.dataset.tk;if(!t)return;try{localStorage.setItem(tplKey(t),e.target.value.trim()||RATE_TPL_DEF[t])}catch(err){}Cloud.saveMeta();toast('Đã lưu lời nhắn '+(t==='bao_tri'?'bảo trì':'triển khai'));});
 $('#rateTplBox').addEventListener('click',e=>{const b=e.target.closest('[data-tpl-reset]');if(!b)return;const t=b.dataset.tplReset;try{localStorage.removeItem(tplKey(t))}catch(err){}Cloud.saveMeta();$('#rateTpl_'+(t==='bao_tri'?'bt':'tk')).value=RATE_TPL_DEF[t];toast('Đã về lời nhắn mẫu');});
 $('#v-danh-gia').addEventListener('click',e=>{
-  const rm=e.target.closest('[data-rm]');if(rm){const [Y,M]=rateMonth.split('-').map(Number);const d=new Date(Y,M-1+(+rm.dataset.rm),1);rateMonth=d.getFullYear()+'-'+pad2(d.getMonth()+1);renderRates();return;}
+  const rv=e.target.closest('[data-rv]');if(rv){rateView=rv.dataset.rv;renderRates();return;}
+  const rd=e.target.closest('[data-rd]');if(rd){if(rd.dataset.rd==='0')rateDay=todayKey();else{const d=new Date(rateDay+'T12:00:00');d.setDate(d.getDate()+(+rd.dataset.rd));rateDay=dayKey(d);}renderRates();return;}
   const rf=e.target.closest('[data-rf]');if(rf){rateFilter=rf.dataset.rf;renderRates();return;}
   const ro=e.target.closest('[data-ropen]');if(ro&&!e.target.closest('button,a')){openRateSheet(ro.dataset.ropen);return;}
-  const zl=e.target.closest('[data-rzalo]');if(zl){const j=Store.jobs[zl.dataset.rzalo];if(j)copyText(rateMsg(j),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');return;}
+  const qb=e.target.closest('[data-q]');if(qb){startQueue();return;}
+  const zl=e.target.closest('[data-rzalo]');if(zl){const j=Store.jobs[zl.dataset.rzalo];if(j){copyText(rateMsg(j),'Đã chép lời nhắn. Trong Zalo, nhấn giữ ô chat và chọn Dán');setRate(j.id,{sentAt:new Date().toISOString()});}return;}
   const mg=e.target.closest('[data-rmsg]');if(mg){const j=Store.jobs[mg.dataset.rmsg];if(!j)return;copyText(rateMsg(j),'Đã chép lời nhắn, dán vào Zalo/SMS gửi khách');return;}
   const cp=e.target.closest('[data-copy-phone]');if(cp){copyText(cp.dataset.copyPhone,'Đã chép số điện thoại');return;}
-  const rs=e.target.closest('[data-rset]');if(rs){setRate(rs.dataset.rset,{st:rs.dataset.v});toast(rs.dataset.v==='danhgia'?'Đã đánh giá, chạm sao để ghi số sao':'Chưa đánh giá');return;}
-  const st=e.target.closest('[data-star]');if(st){const w=st.closest('[data-stars]');if(w)setRate(w.dataset.stars,{stars:+st.dataset.star});}
+  const rs=e.target.closest('[data-rset]');if(rs){setRate(rs.dataset.rset,{req:rs.dataset.v});toast(RATE_ST[rs.dataset.v].l);return;}
 });
 $('#custSearch').addEventListener('input',renderCustomers);
 $('#custList').addEventListener('click',e=>{const b=e.target.closest('[data-copy-coord]');if(b)copyText(b.dataset.copyCoord,'Đã chép tọa độ');});
