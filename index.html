@@ -1272,7 +1272,7 @@ function openJob(id,preset){
     </fieldset>
     <fieldset id="btBox"><legend>Note bảo trì (BT)</legend>
       <div class="grid2">
-        <label class="f">1. Số CLs trong 6 tháng gần nhất<input id="bt1" type="number" min="0" inputmode="numeric" value="${esc(bt.cls)}"><span class="hint" id="bt1Hint">Tự tính từ dữ liệu đã lưu: số ca bảo trì của khách trong 6 tháng tính đến ngày làm, kể cả ca này.</span></label>
+        <label class="f">1. Số CLs trong 6 tháng gần nhất<input id="bt1" type="number" min="0" inputmode="numeric" value="${esc(bt.cls)}"><span class="hint" id="bt1Hint">Tự tính từ dữ liệu đã lưu: số ca bảo trì trước đó của khách trong 6 tháng, không tính ca này.</span></label>
         <label class="f">2. Liên hệ KH<input id="bt2" value="${esc(bt.lienhe)}" placeholder="SĐT / đã liên hệ lúc…"></label>
         <label class="f">Tên KH<input id="bt2b" value="${esc(bt.tenkh)}"></label>
         <label class="f">3. Mô hình nhà<input id="bt3" value="${esc(bt.nha)}" placeholder="VD: Nhà ống 4×16 m, 3 tầng"></label>
@@ -1342,7 +1342,7 @@ function openJob(id,preset){
       h.className='hint ok';h.textContent=`Khách đã có: ${c.name}${c.contract?' · SHĐ '+c.contract:''}${c.phone?' · '+c.phone:''}. Đã tự điền thông tin, ca sẽ ghi vào khách này.`;
       toast('Khách đã có, đã tự điền thông tin');updCls();};
     function updCls(){const el=$('#bt1',root);if(!el||el.dataset.manual==='1')return;let cid=null;try{cid=matchedId||null}catch(err){}if(!cid&&sel.value!=='__new')cid=sel.value;
-      const w=$('#fDoneAt',root).value;const at=w?new Date(w).toISOString():new Date().toISOString();el.value=String(clsCount(cid,at,j.id)+1);}
+      const w=$('#fDoneAt',root).value;const at=w?new Date(w).toISOString():new Date().toISOString();el.value=String(clsCount(cid,at,j.id));}
     $('#nContract',root).addEventListener('input',e=>tryMatch(e.target));
     $('#nPhone',root).addEventListener('input',e=>tryMatch(e.target));
     const showCust=()=>{const isNew=sel.value==='__new';$('#newCustBox',root).hidden=!isNew;const c=Store.customers[sel.value];
@@ -1367,7 +1367,7 @@ function openJob(id,preset){
       if(!$('#bt2b',root).value)$('#bt2b',root).value=c0.name;if(!$('#bt2',root).value)$('#bt2',root).value=c0.phone||'';
       const hd=houseDesc(c0.id);if(!$('#bt3',root).value&&hd.nha)$('#bt3',root).value=hd.nha;if(!$('#bt4',root).value&&hd.thietbi)$('#bt4',root).value=hd.thietbi;});
     sel.addEventListener('change',showCust);showCust();
-    {const b1=$('#bt1',root);if(b1){if(j.bt&&j.bt.clsManual)b1.dataset.manual='1';b1.addEventListener('input',()=>{b1.dataset.manual='1';$('#bt1Hint',root).textContent='Đã sửa tay. Xóa trống ô để app tự tính lại.';});b1.addEventListener('change',()=>{if(!b1.value){b1.dataset.manual='';updCls();$('#bt1Hint',root).textContent='Tự tính từ dữ liệu đã lưu: số ca bảo trì của khách trong 6 tháng tính đến ngày làm, kể cả ca này.';}});}
+    {const b1=$('#bt1',root);if(b1){if(j.bt&&j.bt.clsManual)b1.dataset.manual='1';b1.addEventListener('input',()=>{b1.dataset.manual='1';$('#bt1Hint',root).textContent='Đã sửa tay. Xóa trống ô để app tự tính lại.';});b1.addEventListener('change',()=>{if(!b1.value){b1.dataset.manual='';updCls();$('#bt1Hint',root).textContent='Tự tính từ dữ liệu đã lưu: số ca bảo trì trước đó của khách trong 6 tháng, không tính ca này.';}});}
      sel.addEventListener('change',()=>updCls());$('#fDoneAt',root).addEventListener('change',()=>updCls());updCls();}
     let phIds=(j.photos||[]).slice();
     const phRender=async()=>{const box=$('#phBox',root);const out=[];for(const id of phIds){try{const p=await PH.get(id);if(p)out.push(`<span class="thumbw"><button type="button" class="thumb" data-photo="${esc(id)}"><img src="${p.data}" alt="Ảnh kỹ thuật"></button><button type="button" class="thumbx" data-phdel="${esc(id)}" aria-label="Xóa ảnh">×</button></span>`);}catch(e){}}
